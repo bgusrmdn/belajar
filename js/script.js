@@ -1006,12 +1006,9 @@ window.addOutgoingItem = addOutgoingItem;
 document.addEventListener("DOMContentLoaded", () => {
   // Helper function untuk format angka di JS
   function formatAngkaJS(angka) {
-    if (angka === null || isNaN(Number.parseFloat(angka))) return "";
-    const nomor = Number.parseFloat(angka);
-    const parts = nomor.toString().split(".");
-    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    if (parts.length === 1) return intPart;
-    return intPart + "," + parts[1];
+    const num = Number.parseFloat(angka);
+    if (!isFinite(num)) return "";
+    return num.toLocaleString('en-US', { maximumFractionDigits: 6, useGrouping: false });
   }
 
   // --- LOGIKA UNTUK HALAMAN DAFTAR PRODUK ---
