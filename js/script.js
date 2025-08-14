@@ -1459,12 +1459,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderItemsTable() {
       itemsListTbody.innerHTML = "";
-      if (outgoingItems.length === 0) {
+      const normalItems = (outgoingItems || []).filter(it => !(Number.parseFloat(it.lot_number || '0') > 0));
+      if (normalItems.length === 0) {
         itemsListTbody.innerHTML =
           '<tr><td colspan="6" class="text-center text-muted">Belum ada item yang ditambahkan.</td></tr>';
         return;
       }
-      outgoingItems.forEach((item, index) => {
+      normalItems.forEach((item, index) => {
         const row = `<tr><td>${index + 1}</td><td class="text-start">${
           item.product_name
         }<br><small class="text-muted">${item.sku || ""}</small></td><td>${
@@ -1634,8 +1635,31 @@ document.addEventListener("DOMContentLoaded", () => {
             if (originalDocHidden && !originalDocHidden.value) {
               originalDocHidden.value = data.main.document_number || '';
             }
-            outgoingItems = data.items.map((item) => ({ ...item }));
+            // Split items: normal vs 501 (lot_number > 0)
+            const normal = [];
+            const only501 = [];
+            (data.items || []).forEach((it) => {
+              const lot = Number.parseFloat(it.lot_number || '0');
+              if (lot > 0) {
+                only501.push({
+                  product_id: it.product_id,
+                  product_name: it.product_name,
+                  sku: it.sku,
+                  incoming_id: it.incoming_id,
+                  batch_number: it.batch_number,
+                  qty_kg: 0,
+                  qty_sak: 0,
+                  lot_number: lot
+                });
+              } else {
+                normal.push({ ...it });
+              }
+            });
+            outgoingItems = normal.map((item, index) => ({ ...item }));
             renderItemsTable();
+            // Fill embedded 501 tab list
+            embedded501Items = only501;
+            renderEmbedded501List();
           })
           .catch((err) => {
             console.error("Fetch Error:", err);
