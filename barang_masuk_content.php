@@ -370,8 +370,8 @@ $query_params = $_GET;
 
 <!-- Enhanced Modal for Incoming Transaction -->
 <div class="modal fade" id="incomingTransactionModal" tabindex="-1" aria-labelledby="incomingModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
+    <div class="modal-dialog modal-xl modal-dialog-centered" style="overflow:visible;">
+        <div class="modal-content border-0 shadow-lg" style="overflow:visible;">
             <form action="index.php" method="POST" id="incomingTransactionForm">
 <?php
 foreach ($_GET as $key => $val) {
@@ -399,10 +399,10 @@ foreach ($_GET as $key => $val) {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto; overflow-x: visible;">
                     <!-- Header Info -->
                     <div class="card bg-light border-0 mb-4">
-                        <div class="card-body">
+                        <div class="card-body" style="position:relative;">
                             <h6 class="card-title fw-bold text-primary mb-3">
                                 <i class="bi bi-info-circle me-2"></i>Informasi Transaksi
                             </h6>
@@ -458,7 +458,7 @@ foreach ($_GET as $key => $val) {
                                  <i class="bi bi-file-text me-2"></i>Informasi Dokumen
                              </h6>
                          </div>
-                         <div class="card-body">
+                         <div class="card-body" style="position:relative;">
                              <div class="row g-3">
                                  <div class="col-md-12">
                                      <label class="form-label fw-semibold">
@@ -477,7 +477,7 @@ foreach ($_GET as $key => $val) {
                                  <i class="bi bi-plus-circle me-2"></i>Tambah Item Barang
                              </h6>
                          </div>
-                         <div class="card-body">
+                         <div class="card-body" style="position:relative;">
                              <div class="row g-3">
                                  <div class="row g-3 align-items-end">
                                     <div class="col-md-3 position-relative">
@@ -492,7 +492,7 @@ foreach ($_GET as $key => $val) {
                                         </datalist>
                                         <input type="hidden" id="item_product_id_hidden">
                                         <small id="item_sku_display_incoming" class="text-muted d-block mt-1"></small>
-                                        <div id="incomingAutocompleteList" class="list-group shadow-sm" style="position:absolute; z-index:1055; top:100%; left:0; right:0; display:none; max-height:240px; overflow:auto;"></div>
+                                        <div id="incomingAutocompleteList" class="list-group shadow-sm" style="position:absolute; z-index:99999; top:100%; left:0; right:0; display:none; max-height:240px; overflow:auto;"></div>
                                     </div>
                                     <div class="col-md-2">
                                     <label class="form-label fw-semibold">
@@ -542,8 +542,8 @@ foreach ($_GET as $key => $val) {
                                 <i class="bi bi-calculator me-2"></i>Input 501 (Lot)
                             </h6>
                         </div>
-                        <div class="card-body">
-                            <div class="row g-3 align-items-end">
+                        <div class="card-body" style="position:relative;">
+                             <div class="row g-3 align-items-end">
                                 <div class="col-md-4 position-relative">
                                     <label class="form-label fw-semibold">
                                         <i class="bi bi-search me-1 text-primary"></i>Nama Barang (501)
@@ -551,7 +551,7 @@ foreach ($_GET as $key => $val) {
                                     <input class="form-control border-0 shadow-sm" id="item501_product_name" placeholder="🔍 Ketik untuk mencari produk..." autocomplete="off">
                                     <input type="hidden" id="item501_product_id_hidden">
                                     <small id="item501_sku_display" class="text-muted d-block mt-1"></small>
-                                    <div id="incoming501AutocompleteList" class="list-group shadow-sm" style="position:absolute; z-index:1055; top:100%; left:0; right:0; display:none; max-height:240px; overflow:auto;"></div>
+                                    <div id="incoming501AutocompleteList" class="list-group shadow-sm" style="position:absolute; z-index:99999; top:100%; left:0; right:0; display:none; max-height:240px; overflow:auto;"></div>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label fw-semibold">
