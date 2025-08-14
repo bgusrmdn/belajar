@@ -1662,6 +1662,123 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       hiddenJsonInput.value = JSON.stringify(outgoingItems);
     });
+
+    // Add embedded 501 handlers inside outgoing modal
+    const productName501 = document.getElementById('keluar501_product_name_embedded');
+    const productId501Hidden = document.getElementById('keluar501_product_id_embedded');
+    const skuDisplay501 = document.getElementById('keluar501_sku_display_embedded');
+    const datalistOutgoing = document.getElementById('datalistProductsOutgoing');
+    const batchSelect501 = document.getElementById('keluar501_batch_select_embedded');
+    const sisaDisplay501 = document.getElementById('keluar501_sisa_display_embedded');
+    const qty501Input = document.getElementById('keluar501_quantity_embedded');
+
+    const batches501Cache = {};
+
+    function populate501OptionsEmbedded(productId, data) {
+      if (!batchSelect501) return;
+      batchSelect501.innerHTML = '<option value="" selected disabled>-- Pilih Batch --</option>';
+      if (data && data.length > 0) {
+        data.forEach((batch) => {
+          const sisa = Number.parseFloat(batch.sisa_lot_number ?? batch.remaining_501 ?? 0);
+          if (sisa > 0) {
+            const option = document.createElement('option');
+            option.value = batch.id;
+            option.textContent = `Tgl: ${batch.transaction_date} - Batch: ${batch.batch_number || 'N/A'} (Sisa 501: ${sisa.toFixed(2)} Kg)`;
+            option.dataset.sisa = String(sisa);
+            option.dataset.batch_number = batch.batch_number || '';
+            batchSelect501.appendChild(option);
+          }
+        });
+      } else {
+        batchSelect501.innerHTML = '<option value="">-- Tidak ada batch dengan sisa 501 --</option>';
+      }
+      batchSelect501.disabled = false;
+    }
+
+    function load501BatchesEmbedded(productId) {
+      if (!productId || !batchSelect501) return;
+      batchSelect501.innerHTML = '<option value="">Memuat batch...</option>';
+      batchSelect501.disabled = true;
+      sisaDisplay501 && (sisaDisplay501.value = '0.00');
+      qty501Input && (qty501Input.value = '');
+      if (batches501Cache[productId]) {
+        populate501OptionsEmbedded(productId, batches501Cache[productId]);
+        return;
+      }
+      fetch(`api_get_batches_501.php?product_id=${productId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          batches501Cache[productId] = data || [];
+          populate501OptionsEmbedded(productId, batches501Cache[productId]);
+        })
+        .catch(() => {
+          batchSelect501.innerHTML = '<option value="">Gagal memuat batch</option>';
+          batchSelect501.disabled = false;
+        });
+    }
+
+    if (productName501 && datalistOutgoing) {
+      productName501.addEventListener('input', () => {
+        const opt = Array.from(datalistOutgoing.options).find(o => o.value === productName501.value);
+        if (opt) {
+          if (productId501Hidden) productId501Hidden.value = opt.dataset.id || '';
+          if (skuDisplay501) skuDisplay501.textContent = opt.dataset.sku ? `Kode: ${opt.dataset.sku}` : '';
+          load501BatchesEmbedded(opt.dataset.id);
+        } else {
+          if (productId501Hidden) productId501Hidden.value = '';
+          if (skuDisplay501) skuDisplay501.textContent = '';
+          if (batchSelect501) {
+            batchSelect501.innerHTML = '<option value="">-- Pilih produk terlebih dahulu --</option>';
+            batchSelect501.disabled = true;
+          }
+        }
+      });
+    }
+
+    if (batchSelect501 && sisaDisplay501 && qty501Input) {
+      batchSelect501.addEventListener('change', function() {
+        const sel = this.options[this.selectedIndex];
+        const sisa = Number.parseFloat(sel?.dataset?.sisa || '0');
+        sisaDisplay501.value = isFinite(sisa) ? sisa.toFixed(2) : '0.00';
+        qty501Input.value = isFinite(sisa) ? sisa.toFixed(2) : '';
+        qty501Input.max = isFinite(sisa) ? String(sisa) : '';
+      });
+      qty501Input.addEventListener('input', function() {
+        const max = Number.parseFloat(this.max) || 0;
+        const val = Number.parseFloat(this.value) || 0;
+        if (max > 0 && val > max) this.value = String(max);
+      });
+    }
+
+    // Hook submit to include 501 as separate item if filled
+    const outgoingForm = document.getElementById('outgoingTransactionForm');
+    const itemsJsonHidden = document.getElementById('items_json');
+    if (outgoingForm && itemsJsonHidden) {
+      outgoingForm.addEventListener('submit', (e) => {
+        try {
+          const list = JSON.parse(itemsJsonHidden.value || '[]');
+          const pid = productId501Hidden?.value;
+          const sel = batchSelect501?.options[batchSelect501.selectedIndex];
+          const qty501 = Number.parseFloat(qty501Input?.value || '0');
+          if (pid && sel && isFinite(qty501) && qty501 > 0) {
+            const productOpt = Array.from(datalistOutgoing?.options || []).find(o => o.dataset.id === pid);
+            const stdQty = Number.parseFloat(productOpt?.dataset?.stdqty || '0');
+            const qtySak = stdQty > 0 ? qty501 / stdQty : 0;
+            list.push({
+              product_id: pid,
+              product_name: productOpt?.value || '',
+              sku: productOpt?.dataset?.sku || '',
+              incoming_id: sel.value,
+              batch_number: sel.dataset.batch_number || '',
+              qty_kg: 0,
+              qty_sak: 0,
+              lot_number: qty501
+            });
+            itemsJsonHidden.value = JSON.stringify(list);
+          }
+        } catch (_) { /* ignore */ }
+      });
+    }
   }
   // --- LOGIKA UNTUK HALAMAN KARTU STOK (STOCK JALUR) ---
   const stockJalurPage = document.getElementById("stockJalurPage");
