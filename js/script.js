@@ -1042,7 +1042,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- LOGIKA UNTUK MODAL BARANG MASUK ---
   const incomingModalEl = document.getElementById("incomingTransactionModal");
-  if (incomingModalEl) {
+  if (incomingModalEl && !document.getElementById('datalistProductsIncoming')) {
     const modalTitle = document.getElementById("incomingModalLabel");
     const submitButton = document.getElementById("incomingSubmitButton");
     const modalForm = document.getElementById("incomingTransactionForm");

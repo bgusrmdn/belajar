@@ -502,13 +502,6 @@ foreach ($_GET as $key => $val) {
                                     <small class="form-text text-muted">Batch boleh sama</small>
                                     </div>
                                     <div class="col-md-2">
-                                    <label class="form-label fw-semibold">
-                                    <i class="bi bi-weight me-1 text-primary"></i>Qty Grossweight (Kg) <span class="text-muted">(Opsional)</span>
-                                    </label>
-                                    <input type="number" step="any" class="form-control border-0 shadow-sm" id="item_grossweight_kg" placeholder="0.00 (kosongkan jika tidak ada)">
-                                    <small class="form-text text-muted">Opsional - untuk perhitungan 501</small>
-                                    </div>
-                                    <div class="col-md-2">
                                         <label class="form-label fw-semibold">
                                             <i class="bi bi-weight me-1 text-primary"></i>Qty (Kg)
                                         </label>
@@ -532,13 +525,6 @@ foreach ($_GET as $key => $val) {
                                         </div>
                                         <small class="form-text text-muted">Centang untuk auto-hitung</small>
                                     </div>
-                                    <div class="col-md-1">
-                                    <label class="form-label fw-semibold">
-                                    <i class="bi bi-calculator me-1 text-success"></i>501 (Kg)
-                                    </label>
-                                        <input type="number" step="any" class="form-control border-0 bg-light" id="item_501_preview" placeholder="0.00" readonly>
-                                         <small class="form-text text-muted">Auto hitung</small>
-                                     </div>
                                      <div class="col-md-1">
                                          <button type="button" class="btn btn-success w-100 fw-semibold shadow-sm" id="addItemBtn" style="margin-top: 32px;">
                                              <i class="bi bi-plus-lg me-2"></i>Tambah
@@ -548,6 +534,46 @@ foreach ($_GET as $key => $val) {
                              </div>
                          </div>
                      </div>
+
+                    <!-- Dedicated 501 Input Section -->
+                    <div class="card border-warning mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="card-title fw-bold mb-0">
+                                <i class="bi bi-calculator me-2"></i>Input 501 (Lot)
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4 position-relative">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-search me-1 text-primary"></i>Nama Barang (501)
+                                    </label>
+                                    <input class="form-control border-0 shadow-sm" id="item501_product_name" placeholder="🔍 Ketik untuk mencari produk..." autocomplete="off">
+                                    <input type="hidden" id="item501_product_id_hidden">
+                                    <small id="item501_sku_display" class="text-muted d-block mt-1"></small>
+                                    <div id="incoming501AutocompleteList" class="list-group shadow-sm" style="position:absolute; z-index:1055; top:100%; left:0; right:0; display:none; max-height:240px; overflow:auto;"></div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-tag me-1 text-primary"></i>Batch Number
+                                    </label>
+                                    <input type="text" class="form-control border-0 shadow-sm" id="item501_batch_number" placeholder="Batch number">
+                                    <small class="form-text text-muted">Default otomatis dari tanggal</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-calculator me-1 text-success"></i>Jumlah 501 (Kg)
+                                    </label>
+                                    <input type="number" step="any" class="form-control border-0 shadow-sm" id="item501_qty" placeholder="0.00">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-warning w-100 fw-semibold shadow-sm" id="addItem501Btn" style="margin-top: 32px;">
+                                        <i class="bi bi-plus-lg me-2"></i>Tambah 501
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Items List -->
                     <div class="card border-success">
@@ -564,7 +590,6 @@ foreach ($_GET as $key => $val) {
                                             <th style="width: 5%;" class="fw-bold">#</th>
                                             <th class="text-start fw-bold">Nama Barang</th>
                                             <th class="fw-bold">Batch</th>
-                                            <th class="fw-bold">Grossweight (Kg)</th>
                                             <th class="fw-bold">Qty (Kg)</th>
                                             <th class="fw-bold">Qty (Sak)</th>
                                             <th class="fw-bold">501 (Lot)</th>
@@ -573,11 +598,43 @@ foreach ($_GET as $key => $val) {
                                     </thead>
                                     <tbody id="incoming_items_list">
                                         <tr>
-                                            <td colspan="8" class="text-center text-muted p-4">
+                                            <td colspan="7" class="text-center text-muted p-4">
                                                 <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
                                                 <span>Belum ada item yang ditambahkan</span>
                                                 <br>
                                                 <small>Gunakan form di atas untuk menambah item</small>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 501 Items List -->
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-white">
+                            <h6 class="card-title fw-bold mb-0">
+                                <i class="bi bi-list-ul me-2"></i>Daftar 501 (Lot) yang Akan Dimasukkan
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 5%;" class="fw-bold">#</th>
+                                            <th class="text-start fw-bold">Nama Barang</th>
+                                            <th class="fw-bold">Batch</th>
+                                            <th class="fw-bold">501 (Kg)</th>
+                                            <th style="width: 10%;" class="text-center fw-bold">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="incoming_items_501_list">
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted p-4">
+                                                <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
+                                                <span>Belum ada 501 yang ditambahkan</span>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -602,11 +659,12 @@ foreach ($_GET as $key => $val) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-        function submitFilterForm() {
+    function submitFilterForm() {
         const form = document.querySelector('form[action="index.php"]');
         if (form) form.submit();
     }
     let incomingItems = [];
+    let incomingItems501 = [];
     let itemCounter = 1;
     let isEditMode = false;
     let originalPoNumber = '';
@@ -615,6 +673,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const itemProductNameInput = document.getElementById('item_product_name_incoming');
     const itemProductIdHidden = document.getElementById('item_product_id_hidden');
     const datalistProductsIncoming = document.getElementById('datalistProductsIncoming');
+
+    function updateItemsJSON() {
+        const itemsJsonInput = document.getElementById('incoming_items_json');
+        if (itemsJsonInput) {
+            itemsJsonInput.value = JSON.stringify([ ...incomingItems, ...incomingItems501 ]);
+        }
+    }
 
     if (itemProductNameInput && datalistProductsIncoming) {
         itemProductNameInput.addEventListener('input', function() {
@@ -629,7 +694,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const addItemBtn = document.getElementById('addItemBtn');
     const itemsList = document.getElementById('incoming_items_list');
-    const itemsJsonInput = document.getElementById('incoming_items_json');
 
     if (addItemBtn) {
         addItemBtn.addEventListener('click', function() {
@@ -638,7 +702,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const batchNumber = document.getElementById('item_batch_number').value;
             const quantityKg = parseFloat(document.getElementById('item_quantity_kg').value) || 0;
             const quantitySacks = parseFloat(document.getElementById('item_quantity_sacks').value) || 0;
-            const grossweightKg = parseFloat(document.getElementById('item_grossweight_kg').value) || 0;
 
             if (!productName || !productId) {
                 alert('Pilih nama barang terlebih dahulu!');
@@ -652,46 +715,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Masukkan quantity yang valid!');
                 return;
             }
-            if (grossweightKg > 0 && grossweightKg < quantityKg) {
-                alert('Grossweight tidak boleh lebih kecil dari Qty (Kg)!');
-                return;
-            }
 
-
-            let nilai501 = 0;
-            if (grossweightKg > 0 && quantityKg > 0) {
-                nilai501 = grossweightKg - quantityKg;
-            }
+            const skuOpt = document.querySelector(`option[value="${productName}"]`);
+            const sku = skuOpt ? skuOpt.dataset.sku : '';
 
             const newItem = {
                 no: itemCounter++,
                 product_id: productId,
                 product_name: productName,
-                sku: document.querySelector(`option[value="${productName}"]`).dataset.sku,
+                sku: sku,
                 batch_number: batchNumber,
                 quantity_kg: quantityKg,
                 quantity_sacks: quantitySacks,
-                grossweight_kg: grossweightKg, // simpan grossweight
-                lot_number: nilai501 // simpan nilai 501 (grossweight - qty_kg)
+                grossweight_kg: 0,
+                lot_number: 0
             };
 
             incomingItems.push(newItem);
-
-            itemsJsonInput.value = JSON.stringify(incomingItems);
-
+            updateItemsJSON();
             updateItemsTable();
 
             document.getElementById('item_product_name_incoming').value = '';
             document.getElementById('item_product_id_hidden').value = '';
-            document.getElementById('item_grossweight_kg').value = '';
             document.getElementById('item_quantity_kg').value = '';
             document.getElementById('item_quantity_sacks').value = '';
             document.getElementById('item_batch_number').value = '';
-            document.getElementById('item_501_preview').value = '0.00';
-            
-            item501Preview.classList.remove('bg-danger', 'text-white');
-            item501Preview.classList.add('bg-light');
-            
             fillBatchNumber();
         });
     }
@@ -700,7 +748,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (incomingItems.length === 0) {
             itemsList.innerHTML = `
                 <tr>
-                    <td colspan="8" class="text-center text-muted p-4">
+                    <td colspan="7" class="text-center text-muted p-4">
                         <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
                         <span>Belum ada item yang ditambahkan</span>
                         <br>
@@ -716,7 +764,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td class="text-center">${idx + 1}</td>
                         <td>${item.product_name}</td>
                         <td>${item.batch_number}</td>
-                        <td class="fw-semibold text-primary">${item.grossweight_kg ? Number(item.grossweight_kg).toLocaleString('id-ID') + ' kg' : ''}</td>
                         <td>${item.quantity_kg ? Number(item.quantity_kg).toLocaleString('id-ID') + ' kg' : ''}</td>
                         <td>${item.quantity_sacks ? Number(item.quantity_sacks).toLocaleString('id-ID') + ' sak' : ''}</td>
                         <td class="fw-bold text-success">${item.lot_number ? Number(item.lot_number).toLocaleString('id-ID') + ' kg' : '0 kg'}</td>
@@ -735,9 +782,185 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.removeItem = function(index) {
         incomingItems.splice(index, 1);
-        itemsJsonInput.value = JSON.stringify(incomingItems);
+        updateItemsJSON();
         updateItemsTable();
     };
+
+    // 501 Input Handling
+    const item501NameInput = document.getElementById('item501_product_name');
+    const item501IdHidden = document.getElementById('item501_product_id_hidden');
+    const item501SkuDisplay = document.getElementById('item501_sku_display');
+    const item501AutoList = document.getElementById('incoming501AutocompleteList');
+    const item501BatchInput = document.getElementById('item501_batch_number');
+    const item501QtyInput = document.getElementById('item501_qty');
+    const addItem501Btn = document.getElementById('addItem501Btn');
+    const items501List = document.getElementById('incoming_items_501_list');
+
+    function buildIncoming501Suggestions(term) {
+        if (!item501AutoList) return;
+        const datalist = document.getElementById('datalistProductsIncoming');
+        const query = (term || '').toLowerCase();
+        item501AutoList.innerHTML = '';
+        if (!query || !datalist) {
+            item501AutoList.style.display = 'none';
+            return;
+        }
+        let count = 0;
+        Array.from(datalist.options).forEach((opt) => {
+            const name = (opt.value || '').toLowerCase();
+            const sku = (opt.dataset.sku || '').toLowerCase();
+            if (name.includes(query) || sku.includes(query)) {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+                item.innerHTML = `<span>${opt.value}</span><code class="small">${opt.dataset.sku || ''}</code>`;
+                item.addEventListener('click', () => {
+                    item501NameInput.value = opt.value;
+                    item501IdHidden.value = opt.dataset.id || '';
+                    if (item501SkuDisplay) item501SkuDisplay.textContent = `Kode: ${opt.dataset.sku || ''}`;
+                    item501AutoList.style.display = 'none';
+                });
+                item501AutoList.appendChild(item);
+                count++;
+            }
+        });
+        item501AutoList.style.display = count > 0 ? 'block' : 'none';
+    }
+
+    if (item501NameInput) {
+        item501NameInput.addEventListener('input', () => {
+            const datalist = document.getElementById('datalistProductsIncoming');
+            const selected = Array.from(datalist?.options || []).find(
+                (opt) => opt.value === item501NameInput.value
+            );
+            if (selected) {
+                item501IdHidden.value = selected.dataset.id || '';
+                if (item501SkuDisplay) item501SkuDisplay.textContent = `Kode: ${selected.dataset.sku || ''}`;
+            } else {
+                item501IdHidden.value = '';
+                if (item501SkuDisplay) item501SkuDisplay.textContent = '';
+            }
+            buildIncoming501Suggestions(item501NameInput.value);
+        });
+        document.addEventListener('click', (e) => {
+            if (!item501AutoList) return;
+            if (!item501AutoList.contains(e.target) && e.target !== item501NameInput) {
+                item501AutoList.style.display = 'none';
+            }
+        });
+    }
+
+    function updateItems501Table() {
+        if (incomingItems501.length === 0) {
+            items501List.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted p-4">
+                        <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
+                        <span>Belum ada 501 yang ditambahkan</span>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        const frag = document.createDocumentFragment();
+        incomingItems501.forEach((item, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="text-center">${idx + 1}</td>
+                <td>${item.product_name}</td>
+                <td>${item.batch_number}</td>
+                <td class="fw-bold text-success">${Number(item.lot_number).toLocaleString('id-ID')} kg</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem501(${idx})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            frag.appendChild(tr);
+        });
+        items501List.innerHTML = '';
+        items501List.appendChild(frag);
+    }
+
+    window.removeItem501 = function(index) {
+        incomingItems501.splice(index, 1);
+        updateItemsJSON();
+        updateItems501Table();
+    }
+
+    function generateBatchNumber(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${year}${month}${day}10`;
+    }
+
+    function fillBatchNumber() {
+        const transactionDateInput = document.getElementById('incoming_transaction_date');
+        const batchNumberInput = document.getElementById('item_batch_number');
+        const currentDate = transactionDateInput.value || new Date().toISOString().split('T')[0];
+        const generatedBatch = generateBatchNumber(currentDate);
+        if (generatedBatch) {
+            batchNumberInput.value = generatedBatch;
+        }
+    }
+
+    function fillBatchNumber501() {
+        const transactionDateInput = document.getElementById('incoming_transaction_date');
+        const currentDate = transactionDateInput.value || new Date().toISOString().split('T')[0];
+        const generatedBatch = generateBatchNumber(currentDate);
+        if (generatedBatch && item501BatchInput) {
+            item501BatchInput.value = generatedBatch;
+        }
+    }
+
+    if (addItem501Btn) {
+        addItem501Btn.addEventListener('click', function() {
+            const productName = item501NameInput.value;
+            const productId = item501IdHidden.value;
+            const batchNumber = item501BatchInput.value;
+            const qty501 = parseFloat(item501QtyInput.value) || 0;
+
+            if (!productName || !productId) {
+                alert('Pilih nama barang 501 terlebih dahulu!');
+                return;
+            }
+            if (!batchNumber) {
+                alert('Masukkan batch number 501!');
+                return;
+            }
+            if (qty501 <= 0) {
+                alert('Masukkan jumlah 501 (Kg) yang valid!');
+                return;
+            }
+
+            const skuOpt = document.querySelector(`option[value="${productName}"]`);
+            const sku = skuOpt ? skuOpt.dataset.sku : '';
+
+            const newItem501 = {
+                no: incomingItems501.length + 1,
+                product_id: productId,
+                product_name: productName,
+                sku: sku,
+                batch_number: batchNumber,
+                quantity_kg: 0,
+                quantity_sacks: 0,
+                grossweight_kg: 0,
+                lot_number: qty501
+            };
+            incomingItems501.push(newItem501);
+            updateItemsJSON();
+            updateItems501Table();
+
+            item501NameInput.value = '';
+            item501IdHidden.value = '';
+            item501QtyInput.value = '';
+            item501BatchInput.value = '';
+            fillBatchNumber501();
+        });
+    }
 
     const editButtons = document.querySelectorAll('.edit-btn');
     editButtons.forEach(button => {
@@ -745,8 +968,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const id = this.getAttribute('data-id');
             const poNumber = this.getAttribute('data-po-number');
             const documentNumber = this.getAttribute('data-document-number');
-            
-            // Selalu kirim doc number juga bila tersedia agar API bisa mengelompokkan akurat
             if (id || poNumber || documentNumber) {
                 loadTransactionData(poNumber, documentNumber, id);
             }
@@ -755,9 +976,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadTransactionData(poNumber, documentNumber, id) {
         let url = 'api_get_incoming_details.php?';
-        
         if (documentNumber && id) {
-            // Prefer doc+anchor untuk memastikan semua item satu kelompok termuat
             url += 'document_number=' + encodeURIComponent(documentNumber) + '&anchor_id=' + encodeURIComponent(id);
         } else if (id) {
             url += 'id=' + encodeURIComponent(id);
@@ -766,7 +985,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (documentNumber) {
             url += 'document_number=' + encodeURIComponent(documentNumber);
         }
-        
         fetch(url)
             .then(response => response.json())
             .then(data => {
@@ -774,12 +992,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Error: ' + data.error);
                     return;
                 }
-
                 isEditMode = true;
                 originalPoNumber = data.transaction_info.po_number;
                 originalDocumentNumber = data.transaction_info.document_number;
                 document.getElementById('original_po_number').value = data.transaction_info.po_number;
-
                 document.getElementById('incoming_transaction_date').value = data.transaction_info.transaction_date;
                 document.getElementById('incoming_po_number').value = data.transaction_info.po_number;
                 document.getElementById('incoming_status').value = data.transaction_info.status;
@@ -787,13 +1003,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('incoming_produsen').value = data.transaction_info.produsen || '';
                 document.getElementById('incoming_license_plate').value = data.transaction_info.license_plate || '';
                 document.getElementById('incoming_document_number').value = data.transaction_info.document_number || '';
-
-                // Set anchor transaction_id untuk mode edit agar server bisa menyinkronkan penghapusan
                 const txIdHidden = document.getElementById('incoming_transaction_id');
                 if (txIdHidden) {
                     txIdHidden.value = id || (data.items && data.items.length > 0 ? data.items[0].id : '');
                 }
-
                 incomingItems = data.items.map(item => ({
                     id: item.id,
                     product_id: item.product_id,
@@ -801,18 +1014,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     batch_number: item.batch_number,
                     quantity_kg: item.quantity_kg,
                     quantity_sacks: item.quantity_sacks,
-                    lot_number: typeof item.lot_number !== 'undefined' ? item.lot_number : '',
-                    grossweight_kg: typeof item.grossweight_kg !== 'undefined' ? item.grossweight_kg : ''
+                    lot_number: typeof item.lot_number !== 'undefined' ? item.lot_number : 0,
+                    grossweight_kg: typeof item.grossweight_kg !== 'undefined' ? item.grossweight_kg : 0
                 }));
-
-                document.getElementById('incoming_items_json').value = JSON.stringify(incomingItems);
+                incomingItems501 = [];
+                updateItemsJSON();
                 updateItemsTable();
-
                 document.getElementById('incomingModalLabel').textContent = 'Edit Item Barang Masuk';
-                
                 const generatedBatch = generateBatchNumber(data.transaction_info.transaction_date);
                 if (generatedBatch) {
-                    batchNumberInput.value = generatedBatch;
+                    document.getElementById('item_batch_number').value = generatedBatch;
+                    fillBatchNumber501();
                 }
             })
             .catch(error => {
@@ -826,6 +1038,14 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.addEventListener('hidden.bs.modal', function() {
             resetForm();
         });
+        modal.addEventListener('shown.bs.modal', function() {
+            const transactionDateInput = document.getElementById('incoming_transaction_date');
+            if (!transactionDateInput.value) {
+                transactionDateInput.value = new Date().toISOString().split('T')[0];
+            }
+            fillBatchNumber();
+            fillBatchNumber501();
+        });
     }
 
     function resetForm() {
@@ -833,63 +1053,54 @@ document.addEventListener('DOMContentLoaded', function() {
         originalPoNumber = '';
         originalDocumentNumber = '';
         incomingItems = [];
-        
+        incomingItems501 = [];
         document.getElementById('incomingTransactionForm').reset();
-        document.getElementById('incoming_items_json').value = '';
-        document.getElementById('item_501_preview').value = '0.00';
-        
-        if (item501Preview) {
-            item501Preview.classList.remove('bg-danger', 'text-white');
-            item501Preview.classList.add('bg-light');
-        }
-        
+        updateItemsJSON();
         updateItemsTable();
-        
+        updateItems501Table();
         document.getElementById('incomingModalLabel').textContent = 'Tambah Transaksi Barang Masuk';
-        
         setTimeout(() => {
+            const transactionDateInput = document.getElementById('incoming_transaction_date');
             if (transactionDateInput && !transactionDateInput.value) {
                 transactionDateInput.value = new Date().toISOString().split('T')[0];
             }
             fillBatchNumber();
+            fillBatchNumber501();
         }, 100);
     }
 
     const form = document.getElementById('incomingTransactionForm');
     if (form) {
         form.addEventListener('submit', function(e) {
-            if (incomingItems.length === 0) {
+            if (incomingItems.length === 0 && incomingItems501.length === 0) {
                 e.preventDefault();
-                alert('Tambahkan minimal satu item sebelum menyimpan!');
+                alert('Tambahkan minimal satu item (barang atau 501) sebelum menyimpan!');
                 return;
             }
-            // Tidak perlu menambahkan hidden transaction_id lagi di submit.
-            // Nilai anchor sudah di-set saat memuat data edit.
+            updateItemsJSON();
         });
     }
 
     const transactionDateInput = document.getElementById('incoming_transaction_date');
     const batchNumberInput = document.getElementById('item_batch_number');
-    
-    function generateBatchNumber(dateString) {
+
+    function generateBatchNumberForExisting(dateString) {
         if (!dateString) return '';
-        
         const date = new Date(dateString);
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
-        
         return `${year}${month}${day}10`;
     }
-    
-    function fillBatchNumber() {
+
+    function fillBatchNumberExisting() {
         const currentDate = transactionDateInput.value || new Date().toISOString().split('T')[0];
-        const generatedBatch = generateBatchNumber(currentDate);
+        const generatedBatch = generateBatchNumberForExisting(currentDate);
         if (generatedBatch) {
             batchNumberInput.value = generatedBatch;
         }
     }
-    
+
     if (transactionDateInput && batchNumberInput) {
         const modal = document.getElementById('incomingTransactionModal');
         if (modal) {
@@ -897,12 +1108,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!transactionDateInput.value) {
                     transactionDateInput.value = new Date().toISOString().split('T')[0];
                 }
-                fillBatchNumber();
+                fillBatchNumberExisting();
+                fillBatchNumber501();
             });
         }
-        
         transactionDateInput.addEventListener('change', function() {
-            fillBatchNumber();
+            fillBatchNumberExisting();
+            fillBatchNumber501();
         });
     }
 
@@ -910,35 +1122,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const itemCalcSakCheck = document.getElementById('incoming_calc_sak_check');
     const itemQuantityKg = document.getElementById('item_quantity_kg');
     const itemQuantitySacks = document.getElementById('item_quantity_sacks');
-    const itemGrossweightKg = document.getElementById('item_grossweight_kg');
-    const item501Preview = document.getElementById('item_501_preview');
-
-    function calculate501() {
-        const grossweight = parseFloat(itemGrossweightKg.value) || 0;
-        const qtyKg = parseFloat(itemQuantityKg.value) || 0;
-        
-        if (grossweight > 0 && qtyKg > 0) {
-            const result501 = grossweight - qtyKg;
-            item501Preview.value = result501.toFixed(2);
-            
-            if (result501 < 0) {
-                item501Preview.classList.add('bg-danger', 'text-white');
-                item501Preview.classList.remove('bg-light');
-            } else {
-                item501Preview.classList.remove('bg-danger', 'text-white');
-                item501Preview.classList.add('bg-light');
-            }
-        } else {
-            item501Preview.value = '0.00';
-            item501Preview.classList.remove('bg-danger', 'text-white');
-            item501Preview.classList.add('bg-light');
-        }
-    }
-
-    if (itemGrossweightKg && itemQuantityKg && item501Preview) {
-        itemGrossweightKg.addEventListener('input', calculate501);
-        itemQuantityKg.addEventListener('input', calculate501);
-    }
 
     if (itemCalcKgCheck && itemCalcSakCheck && itemQuantityKg && itemQuantitySacks) {
         itemCalcKgCheck.addEventListener('change', function() {
@@ -981,7 +1164,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             }
-            calculate501();
         });
 
         itemQuantitySacks.addEventListener('input', function() {
@@ -993,7 +1175,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const standardQty = parseFloat(selectedOption.dataset.stdqty);
                     if (standardQty > 0) {
                         itemQuantityKg.value = (parseFloat(this.value) * standardQty).toFixed(2);
-                        calculate501();
                     }
                 }
             }
