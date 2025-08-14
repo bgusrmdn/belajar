@@ -657,9 +657,46 @@ foreach ($_GET as $key => $val) {
                                                 <i class="bi bi-info-circle me-1"></i>Masukkan jumlah 501 yang akan dikeluarkan
                                             </small>
                                         </div>
+                                        <div class="col-12 d-flex justify-content-end">
+                                            <button type="button" class="btn btn-warning fw-semibold" id="addItem501OutgoingBtn">
+                                                <i class="bi bi-plus-lg me-2"></i>Tambahkan 501
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="card-title fw-bold mb-0">
+                                        <i class="bi bi-list-ul me-2"></i>Daftar Pengeluaran 501
+                                    </h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:5%;" class="fw-bold">#</th>
+                                                    <th class="text-start fw-bold">Nama Barang</th>
+                                                    <th class="fw-bold">Batch</th>
+                                                    <th class="fw-bold">501 (Kg)</th>
+                                                    <th style="width:10%;" class="text-center fw-bold">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="outgoing_items_501_list">
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted p-4">
+                                                        <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
+                                                        <span>Belum ada item 501 yang ditambahkan</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>

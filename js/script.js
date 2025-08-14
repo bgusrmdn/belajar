@@ -1779,6 +1779,91 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (_) { /* ignore */ }
       });
     }
+
+    // 501 embedded list elements
+    const addItem501Btn = document.getElementById('addItem501OutgoingBtn');
+    const items501Tbody = document.getElementById('outgoing_items_501_list');
+    let embedded501Items = [];
+
+    function renderEmbedded501List() {
+      if (!items501Tbody) return;
+      if (!embedded501Items.length) {
+        items501Tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center text-muted p-4">
+              <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
+              <span>Belum ada item 501 yang ditambahkan</span>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      items501Tbody.innerHTML = '';
+      embedded501Items.forEach((it, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="fw-bold">${idx + 1}</td>
+          <td class="text-start">${it.product_name}<br><small class="text-muted">${it.sku || ''}</small></td>
+          <td><span class="badge bg-info text-white">${it.batch_number}</span></td>
+          <td class="fw-bold text-success">${(Number(it.lot_number) || 0).toLocaleString('id-ID')} Kg</td>
+          <td class="text-center">
+            <button type="button" class="btn btn-outline-danger btn-sm" data-index="${idx}"><i class="bi bi-trash3"></i></button>
+          </td>
+        `;
+        items501Tbody.appendChild(tr);
+      });
+    }
+
+    if (addItem501Btn) {
+      addItem501Btn.addEventListener('click', () => {
+        const pid = productId501Hidden?.value;
+        const sel = batchSelect501?.options[batchSelect501.selectedIndex];
+        const qty501 = Number.parseFloat(qty501Input?.value || '0');
+        if (!pid) { Swal?.fire?.('Oops...', 'Pilih Nama Barang 501 terlebih dahulu.', 'warning'); return; }
+        if (!sel || !sel.value) { Swal?.fire?.('Oops...', 'Pilih Batch 501 terlebih dahulu.', 'warning'); return; }
+        if (!(qty501 > 0)) { Swal?.fire?.('Oops...', 'Masukkan jumlah 501 (Kg) yang valid.', 'warning'); return; }
+        const productOpt = Array.from(datalistOutgoing?.options || []).find(o => o.dataset.id === pid);
+        const item = {
+          product_id: pid,
+          product_name: productOpt?.value || '',
+          sku: productOpt?.dataset?.sku || '',
+          incoming_id: sel.value,
+          batch_number: sel.dataset.batch_number || '',
+          qty_kg: 0,
+          qty_sak: 0,
+          lot_number: qty501
+        };
+        embedded501Items.push(item);
+        renderEmbedded501List();
+        // reset qty only
+        if (qty501Input) qty501Input.value = '';
+      });
+
+      if (items501Tbody) {
+        items501Tbody.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-index]');
+          if (!btn) return;
+          const idx = Number.parseInt(btn.dataset.index, 10);
+          if (idx >= 0) {
+            embedded501Items.splice(idx, 1);
+            renderEmbedded501List();
+          }
+        });
+      }
+    }
+
+    // Merge embedded 501 items into items_json on submit
+    if (outgoingForm && itemsJsonHidden) {
+      outgoingForm.addEventListener('submit', (e) => {
+        try {
+          const list = JSON.parse(itemsJsonHidden.value || '[]');
+          if (embedded501Items.length) {
+            const merged = list.concat(embedded501Items);
+            itemsJsonHidden.value = JSON.stringify(merged);
+          }
+        } catch (_) { /* ignore */ }
+      });
+    }
   }
   // --- LOGIKA UNTUK HALAMAN KARTU STOK (STOCK JALUR) ---
   const stockJalurPage = document.getElementById("stockJalurPage");
