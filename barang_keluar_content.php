@@ -509,7 +509,7 @@ foreach ($_GET as $key => $val) {
                                     </datalist>
                                     <small id="item_sku_display_outgoing" class="text-muted d-block mt-1"></small>
                                     <!-- Custom autocomplete dropdown (for contains search) -->
-                                    <div id="outgoingAutocompleteList" class="list-group shadow-sm" style="position:absolute; z-index:1055; top:100%; left:0; right:0; display:none; max-height:240px; overflow:auto;"></div>
+                                    
                                     <input type="hidden" id="item_product_id_hidden">
                                 </div>
                                 <div class="col-md-6">

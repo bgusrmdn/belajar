@@ -33,6 +33,9 @@ function initializeApp() {
 
   // Set default dates
   setDefaultDates();
+
+  // Global product autocomplete overlays (always on top)
+  initializeGlobalProductAutocomplete();
 }
 
 function loadProductsData() {
@@ -1789,7 +1792,155 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-});
+}
+
+function initializeGlobalProductAutocomplete() {
+  const CONFIGS = [
+    {
+      inputId: 'item_product_name_incoming',
+      datalistId: 'datalistProductsIncoming',
+      hiddenId: 'item_product_id_hidden',
+      skuDisplayId: 'item_sku_display_incoming'
+    },
+    {
+      inputId: 'item501_product_name',
+      datalistId: 'datalistProductsIncoming',
+      hiddenId: 'item501_product_id_hidden',
+      skuDisplayId: 'item501_sku_display'
+    },
+    {
+      inputId: 'item_product_name_outgoing',
+      datalistId: 'datalistProductsOutgoing',
+      hiddenId: 'item_product_id_hidden',
+      skuDisplayId: 'item_sku_display_outgoing'
+    }
+  ];
+
+  CONFIGS.forEach((cfg) => {
+    const input = document.getElementById(cfg.inputId);
+    const datalist = document.getElementById(cfg.datalistId);
+    if (!input || !datalist) return;
+    const hidden = cfg.hiddenId ? document.getElementById(cfg.hiddenId) : null;
+    const skuDisplay = cfg.skuDisplayId ? document.getElementById(cfg.skuDisplayId) : null;
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'list-group shadow';
+    Object.assign(dropdown.style, {
+      position: 'fixed',
+      zIndex: '2147483647',
+      display: 'none',
+      maxHeight: '300px',
+      overflowY: 'auto',
+      background: '#fff',
+      borderRadius: '0.375rem',
+      border: '1px solid rgba(0,0,0,.125)'
+    });
+    document.body.appendChild(dropdown);
+
+    let currentIndex = -1;
+    let currentItems = [];
+
+    function positionDropdown() {
+      const rect = input.getBoundingClientRect();
+      dropdown.style.left = `${Math.round(rect.left + window.scrollX)}px`;
+      dropdown.style.top = `${Math.round(rect.bottom + window.scrollY)}px`;
+      dropdown.style.width = `${Math.round(rect.width)}px`;
+    }
+
+    function clearDropdown() {
+      dropdown.innerHTML = '';
+      currentItems = [];
+      currentIndex = -1;
+    }
+
+    function hideDropdown() {
+      dropdown.style.display = 'none';
+      clearDropdown();
+    }
+
+    function showSuggestions(query) {
+      clearDropdown();
+      const q = (query || '').trim().toLowerCase();
+      if (!q) { hideDropdown(); return; }
+      const options = Array.from(datalist.options);
+      let count = 0;
+      for (const opt of options) {
+        const name = (opt.value || '').toLowerCase();
+        const sku = (opt.dataset.sku || '').toLowerCase();
+        if (name.includes(q) || sku.includes(q)) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+          btn.innerHTML = `<span>${opt.value}</span><code class="small">${opt.dataset.sku || ''}</code>`;
+          btn.addEventListener('click', () => selectOption(opt));
+          dropdown.appendChild(btn);
+          currentItems.push({ button: btn, option: opt });
+          count++;
+          if (count >= 20) break;
+        }
+      }
+      if (count === 0) { hideDropdown(); return; }
+      positionDropdown();
+      dropdown.style.display = 'block';
+    }
+
+    function selectOption(opt) {
+      input.value = opt.value || '';
+      if (hidden) hidden.value = opt.dataset.id || '';
+      if (skuDisplay) skuDisplay.textContent = opt.dataset.sku ? `Kode: ${opt.dataset.sku}` : '';
+      hideDropdown();
+      // Trigger input event to let page-specific logic react (e.g., load batches)
+      const evt = new Event('input', { bubbles: true });
+      input.dispatchEvent(evt);
+      input.focus();
+    }
+
+    function moveActive(delta) {
+      if (!currentItems.length) return;
+      currentIndex = (currentIndex + delta + currentItems.length) % currentItems.length;
+      currentItems.forEach((item, idx) => {
+        if (idx === currentIndex) item.button.classList.add('active');
+        else item.button.classList.remove('active');
+      });
+    }
+
+    input.addEventListener('input', () => {
+      showSuggestions(input.value);
+    });
+
+    input.addEventListener('focus', () => {
+      showSuggestions(input.value);
+    });
+
+    input.addEventListener('blur', () => {
+      setTimeout(() => hideDropdown(), 120);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (dropdown.style.display !== 'block') return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(-1); }
+      else if (e.key === 'Enter') {
+        if (currentIndex >= 0 && currentItems[currentIndex]) {
+          e.preventDefault();
+          selectOption(currentItems[currentIndex].option);
+        }
+      } else if (e.key === 'Escape') { hideDropdown(); }
+    });
+
+    window.addEventListener('scroll', () => {
+      if (dropdown.style.display === 'block') positionDropdown();
+    }, true);
+    window.addEventListener('resize', () => {
+      if (dropdown.style.display === 'block') positionDropdown();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target === input || dropdown.contains(e.target)) return;
+      hideDropdown();
+    });
+  });
+}
 
 // Delete confirmation (SweetAlert2)
 if (typeof document !== 'undefined') {

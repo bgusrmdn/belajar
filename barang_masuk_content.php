@@ -492,7 +492,7 @@ foreach ($_GET as $key => $val) {
                                         </datalist>
                                         <input type="hidden" id="item_product_id_hidden">
                                         <small id="item_sku_display_incoming" class="text-muted d-block mt-1"></small>
-                                        <div id="incomingAutocompleteList" class="list-group shadow-sm" style="position:absolute; z-index:99999; top:100%; left:0; right:0; display:none; max-height:240px; overflow:auto;"></div>
+                                        
                                     </div>
                                     <div class="col-md-2">
                                     <label class="form-label fw-semibold">
@@ -551,7 +551,7 @@ foreach ($_GET as $key => $val) {
                                     <input class="form-control border-0 shadow-sm" id="item501_product_name" placeholder="🔍 Ketik untuk mencari produk..." autocomplete="off">
                                     <input type="hidden" id="item501_product_id_hidden">
                                     <small id="item501_sku_display" class="text-muted d-block mt-1"></small>
-                                    <div id="incoming501AutocompleteList" class="list-group shadow-sm" style="position:absolute; z-index:99999; top:100%; left:0; right:0; display:none; max-height:240px; overflow:auto;"></div>
+                                    
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label fw-semibold">
