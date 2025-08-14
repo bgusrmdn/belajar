@@ -63,7 +63,8 @@ function formatAngka($angka) {
                 $decLen = strlen($decPart);
                 $decLen = max(0, min(6, $decLen));
                 $num = (float)$normalized;
-                return number_format($num, $decLen, ',', '');
+                // Gunakan titik sebagai pemisah desimal untuk ekspor; tidak pakai pemisah ribuan
+                return number_format($num, $decLen, '.', '');
             }
             // Tidak ada desimal
             return str_replace('.', ',', (string)(0 + $normalized));
