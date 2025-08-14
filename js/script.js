@@ -1674,6 +1674,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const batches501Cache = {};
 
+    function update501OptionLabel(opt) {
+      if (!opt) return;
+      const date = opt.dataset.date || '';
+      const batchNum = opt.dataset.batch_number || '';
+      const sisa = Number.parseFloat(opt.dataset.sisa || '0');
+      opt.textContent = `Tgl: ${date} - Batch: ${batchNum || 'N/A'} (Sisa 501: ${isFinite(sisa) ? sisa.toFixed(2) : '0.00'} Kg)`;
+    }
+
     function populate501OptionsEmbedded(productId, data) {
       if (!batchSelect501) return;
       batchSelect501.innerHTML = '<option value="" selected disabled>-- Pilih Batch --</option>';
@@ -1683,9 +1691,10 @@ document.addEventListener("DOMContentLoaded", () => {
           if (sisa > 0) {
             const option = document.createElement('option');
             option.value = batch.id;
-            option.textContent = `Tgl: ${batch.transaction_date} - Batch: ${batch.batch_number || 'N/A'} (Sisa 501: ${sisa.toFixed(2)} Kg)`;
-            option.dataset.sisa = String(sisa);
+            option.dataset.date = batch.transaction_date || '';
             option.dataset.batch_number = batch.batch_number || '';
+            option.dataset.sisa = String(sisa);
+            update501OptionLabel(option);
             batchSelect501.appendChild(option);
           }
         });
@@ -1740,7 +1749,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const sel = this.options[this.selectedIndex];
         const sisa = Number.parseFloat(sel?.dataset?.sisa || '0');
         sisaDisplay501.value = isFinite(sisa) ? sisa.toFixed(2) : '0.00';
-        qty501Input.value = isFinite(sisa) ? sisa.toFixed(2) : '';
+        qty501Input.value = '';
         qty501Input.max = isFinite(sisa) ? String(sisa) : '';
       });
       qty501Input.addEventListener('input', function() {
@@ -1790,8 +1799,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!embedded501Items.length) {
         items501Tbody.innerHTML = `
           <tr>
-            <td colspan="5" class="text-center text-muted p-4">
-              <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
+            <td colspan=\"5\" class=\"text-center text-muted p-4\">
+              <i class=\"bi bi-inbox display-6 d-block mb-2 opacity-50\"></i>
               <span>Belum ada item 501 yang ditambahkan</span>
             </td>
           </tr>
@@ -1802,13 +1811,11 @@ document.addEventListener("DOMContentLoaded", () => {
       embedded501Items.forEach((it, idx) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="fw-bold">${idx + 1}</td>
-          <td class="text-start">${it.product_name}<br><small class="text-muted">${it.sku || ''}</small></td>
-          <td><span class="badge bg-info text-white">${it.batch_number}</span></td>
-          <td class="fw-bold text-success">${(Number(it.lot_number) || 0).toLocaleString('id-ID')} Kg</td>
-          <td class="text-center">
-            <button type="button" class="btn btn-outline-danger btn-sm" data-index="${idx}"><i class="bi bi-trash3"></i></button>
-          </td>
+          <td class=\"fw-bold\">${idx + 1}</td>
+          <td class=\"text-start\">${it.product_name}<br><small class=\"text-muted\">${it.sku || ''}</small></td>
+          <td><span class=\"badge bg-info text-white\">${it.batch_number}</span></td>
+          <td class=\"fw-bold text-success\">${(Number(it.lot_number) || 0).toLocaleString('id-ID')} Kg</td>
+          <td class=\"text-center\">\n            <button type=\"button\" class=\"btn btn-outline-danger btn-sm\" data-index=\"${idx}\"><i class=\"bi bi-trash3\"></i></button>\n          </td>
         `;
         items501Tbody.appendChild(tr);
       });
@@ -1822,6 +1829,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!pid) { Swal?.fire?.('Oops...', 'Pilih Nama Barang 501 terlebih dahulu.', 'warning'); return; }
         if (!sel || !sel.value) { Swal?.fire?.('Oops...', 'Pilih Batch 501 terlebih dahulu.', 'warning'); return; }
         if (!(qty501 > 0)) { Swal?.fire?.('Oops...', 'Masukkan jumlah 501 (Kg) yang valid.', 'warning'); return; }
+
+        const sisaBefore = Number.parseFloat(sel.dataset.sisa || '0');
+        if (qty501 > sisaBefore) { Swal?.fire?.('Oops...', `Maksimum ${sisaBefore.toFixed(2)} Kg.`, 'warning'); return; }
+
         const productOpt = Array.from(datalistOutgoing?.options || []).find(o => o.dataset.id === pid);
         const item = {
           product_id: pid,
@@ -1835,8 +1846,14 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         embedded501Items.push(item);
         renderEmbedded501List();
-        // reset qty only
-        if (qty501Input) qty501Input.value = '';
+
+        // Realtime decrement sisa on selected option
+        const newSisa = Math.max(0, sisaBefore - qty501);
+        sel.dataset.sisa = String(newSisa);
+        update501OptionLabel(sel);
+        if (sisaDisplay501) sisaDisplay501.value = newSisa.toFixed(2);
+        if (qty501Input) { qty501Input.value = ''; qty501Input.max = String(newSisa); }
+        if (newSisa <= 0) { sel.disabled = true; }
       });
 
       if (items501Tbody) {
@@ -1845,8 +1862,21 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!btn) return;
           const idx = Number.parseInt(btn.dataset.index, 10);
           if (idx >= 0) {
-            embedded501Items.splice(idx, 1);
+            const removed = embedded501Items.splice(idx, 1)[0];
             renderEmbedded501List();
+            // Restore sisa back to option if still present in list
+            const opt = Array.from(batchSelect501?.options || []).find(o => o.value === removed.incoming_id);
+            if (opt) {
+              const restored = (Number.parseFloat(opt.dataset.sisa || '0') || 0) + (Number.parseFloat(removed.lot_number || '0') || 0);
+              opt.dataset.sisa = String(restored);
+              opt.disabled = false;
+              update501OptionLabel(opt);
+              // If this option is currently selected, update display
+              if (batchSelect501 && batchSelect501.value === opt.value) {
+                if (sisaDisplay501) sisaDisplay501.value = restored.toFixed(2);
+                if (qty501Input) qty501Input.max = String(restored);
+              }
+            }
           }
         });
       }
