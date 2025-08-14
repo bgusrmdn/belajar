@@ -413,18 +413,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type'])) {
                         $sql = "UPDATE outgoing_transactions SET 
                                 product_id = ?, incoming_transaction_id = ?, quantity_kg = ?, 
                                 quantity_sacks = ?, description = ?, document_number = ?, 
-                                batch_number = ?, status = ?, transaction_date = ?
+                                batch_number = ?, lot_number = ?, status = ?, transaction_date = ?
                                 WHERE id = ?";
                         
                         $stmt = $pdo->prepare($sql);
+                        $item_desc = (isset($item['lot_number']) && (float)$item['lot_number'] > 0) ? 'Pengeluaran Sisa 501' : $description;
                         $stmt->execute([
                             $item['product_id'],
                             $item['incoming_id'],
                             $item['qty_kg'],
                             $item['qty_sak'],
-                            $description,
+                            $item_desc,
                             $document_number,
                             $item['batch_number'],
+                            $item['lot_number'] ?? 0,
                             $status,
                             $transaction_date,
                             $item['id']
@@ -441,23 +443,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type'])) {
                             $sql = "INSERT INTO outgoing_transactions 
                                             (product_id, incoming_transaction_id, quantity_kg, quantity_sacks, 
                                             description, document_number, batch_number, lot_number, status, transaction_date, created_at) 
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)";
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                         } else {
                             $sql = "INSERT INTO outgoing_transactions 
                                             (product_id, incoming_transaction_id, quantity_kg, quantity_sacks, 
                                             description, document_number, batch_number, lot_number, status, transaction_date) 
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)";
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                         }
  
                         $stmt = $pdo->prepare($sql);
+                        $item_desc = (isset($item['lot_number']) && (float)$item['lot_number'] > 0) ? 'Pengeluaran Sisa 501' : $description;
                         $paramsIns = [
                             $item['product_id'],
                             $item['incoming_id'],
                             $item['qty_kg'],
                             $item['qty_sak'],
-                            $description,
+                            $item_desc,
                             $document_number,
                             $item['batch_number'],
+                            $item['lot_number'] ?? 0,
                             $status,
                             $transaction_date
                         ];

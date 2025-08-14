@@ -1465,6 +1465,7 @@ document.addEventListener("DOMContentLoaded", () => {
           '<tr><td colspan="6" class="text-center text-muted">Belum ada item yang ditambahkan.</td></tr>';
         return;
       }
+      itemsListTbody.innerHTML = '';
       normalItems.forEach((item, index) => {
         const row = `<tr><td>${index + 1}</td><td class="text-start">${
           item.product_name
