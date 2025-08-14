@@ -1930,6 +1930,12 @@ document.addEventListener("DOMContentLoaded", () => {
       datalistId: 'datalistProductsOutgoing',
       hiddenId: 'item_product_id_hidden',
       skuDisplayId: 'item_sku_display_outgoing'
+    },
+    {
+      inputId: 'keluar501_product_name_embedded',
+      datalistId: 'datalistProductsOutgoing',
+      hiddenId: 'keluar501_product_id_embedded',
+      skuDisplayId: 'keluar501_sku_display_embedded'
     }
   ];
 
