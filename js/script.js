@@ -1838,7 +1838,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <td class=\"fw-bold\">${idx + 1}</td>
           <td class=\"text-start\">${it.product_name}<br><small class=\"text-muted\">${it.sku || ''}</small></td>
           <td><span class=\"badge bg-info text-white\">${it.batch_number}</span></td>
-          <td class=\"fw-bold text-success\">${(Number(it.lot_number) || 0).toLocaleString('id-ID')} Kg</td>
+          <td class=\"fw-bold text-success\">${formatAngkaJS(it.lot_number)} Kg</td>
           <td class=\"text-center\">\n            <button type=\"button\" class=\"btn btn-outline-danger btn-sm\" data-index=\"${idx}\"><i class=\"bi bi-trash3\"></i></button>\n          </td>
         `;
         items501Tbody.appendChild(tr);
