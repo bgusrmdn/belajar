@@ -1790,11 +1790,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (selectedOption && selectedOption.dataset.sisa) {
         quantityInput501.value = selectedOption.dataset.sisa;
       }
-    });
-  }
-}
-
-function initializeGlobalProductAutocomplete() {
+        });
+   }
+});
+ 
+ function initializeGlobalProductAutocomplete() {
   const CONFIGS = [
     {
       inputId: 'item_product_name_incoming',
