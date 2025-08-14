@@ -1008,8 +1008,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function formatAngkaJS(angka) {
     if (angka === null || isNaN(Number.parseFloat(angka))) return "";
     const nomor = Number.parseFloat(angka);
-    // Mengganti titik desimal dengan koma
-    return nomor.toString().replace(".", ",");
+    const parts = nomor.toString().split(".");
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    if (parts.length === 1) return intPart;
+    return intPart + "," + parts[1];
   }
 
   // --- LOGIKA UNTUK HALAMAN DAFTAR PRODUK ---
