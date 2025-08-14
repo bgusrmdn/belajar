@@ -681,39 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    const incomingAutoList = document.getElementById('incomingAutocompleteList');
     const itemSkuDisplayIncoming = document.getElementById('item_sku_display_incoming');
-
-    function buildIncomingSuggestions(term) {
-        if (!incomingAutoList) return;
-        const datalist = datalistProductsIncoming;
-        const query = (term || '').toLowerCase();
-        incomingAutoList.innerHTML = '';
-        if (!query || !datalist) {
-            incomingAutoList.style.display = 'none';
-            return;
-        }
-        let count = 0;
-        Array.from(datalist.options).forEach((opt) => {
-            const name = (opt.value || '').toLowerCase();
-            const sku = (opt.dataset.sku || '').toLowerCase();
-            if (name.includes(query) || sku.includes(query)) {
-                const item = document.createElement('button');
-                item.type = 'button';
-                item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-                item.innerHTML = `<span>${opt.value}</span><code class="small">${opt.dataset.sku || ''}</code>`;
-                item.addEventListener('click', () => {
-                    itemProductNameInput.value = opt.value;
-                    itemProductIdHidden.value = opt.dataset.id || '';
-                    if (itemSkuDisplayIncoming) itemSkuDisplayIncoming.textContent = `Kode: ${opt.dataset.sku || ''}`;
-                    incomingAutoList.style.display = 'none';
-                });
-                incomingAutoList.appendChild(item);
-                count++;
-            }
-        });
-        incomingAutoList.style.display = count > 0 ? 'block' : 'none';
-    }
 
     if (itemProductNameInput && datalistProductsIncoming) {
         itemProductNameInput.addEventListener('input', function() {
@@ -724,13 +692,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 itemProductIdHidden.value = '';
                 if (itemSkuDisplayIncoming) itemSkuDisplayIncoming.textContent = '';
-            }
-            buildIncomingSuggestions(this.value);
-        });
-        document.addEventListener('click', function(e) {
-            if (!incomingAutoList) return;
-            if (!incomingAutoList.contains(e.target) && e.target !== itemProductNameInput) {
-                incomingAutoList.style.display = 'none';
             }
         });
     }
