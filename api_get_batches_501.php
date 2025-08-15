@@ -50,10 +50,11 @@ try {
             'id' => $batch['id'],
             'transaction_date' => $batch['transaction_date'],
             'batch_number' => $batch['batch_number'],
-            'original_lot_number' => (float)$batch['original_lot_number'],
-            'total_keluar_501' => (float)$batch['total_keluar_501'],
-            'sisa_lot_number' => (float)$batch['sisa_lot_number'],
-            'remaining_501' => (float)$batch['remaining_501']
+            // Keep as string to preserve original decimal scale
+            'original_lot_number' => $batch['original_lot_number'],
+            'total_keluar_501' => $batch['total_keluar_501'] ?? '0',
+            'sisa_lot_number' => $batch['sisa_lot_number'],
+            'remaining_501' => $batch['remaining_501']
         ];
     }
 

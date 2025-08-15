@@ -509,7 +509,7 @@ foreach ($_GET as $key => $val) {
                                             <div class="input-group-text bg-light border-0">
                                                 <input class="form-check-input mt-0" type="checkbox" id="incoming_calc_kg_check" title="Auto-hitung dari Qty Sak">
                                             </div>
-                                            <input type="number" step="any" class="form-control border-0" id="item_quantity_kg" placeholder="0.00">
+                                            <input type="text" inputmode="decimal" class="form-control border-0" id="item_quantity_kg" placeholder="0.00">
                                         </div>
                                         <small class="form-text text-muted">Centang untuk auto-hitung</small>
                                     </div>
@@ -521,7 +521,7 @@ foreach ($_GET as $key => $val) {
                                             <div class="input-group-text bg-light border-0">
                                                 <input class="form-check-input mt-0" type="checkbox" id="incoming_calc_sak_check" title="Auto-hitung dari Qty Kg">
                                             </div>
-                                            <input type="number" step="any" class="form-control border-0" id="item_quantity_sacks" placeholder="0">
+                                            <input type="text" inputmode="decimal" class="form-control border-0" id="item_quantity_sacks" placeholder="0">
                                         </div>
                                         <small class="form-text text-muted">Centang untuk auto-hitung</small>
                                     </div>
@@ -1125,11 +1125,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const itemCalcKgCheck = document.getElementById('incoming_calc_kg_check');
-    const itemCalcSakCheck = document.getElementById('incoming_calc_sak_check');
-    const itemQuantityKg = document.getElementById('item_quantity_kg');
-    const itemQuantitySacks = document.getElementById('item_quantity_sacks');
+const itemCalcSakCheck = document.getElementById('incoming_calc_sak_check');
+const itemQuantityKg = document.getElementById('item_quantity_kg');
+const itemQuantitySacks = document.getElementById('item_quantity_sacks');
 
-    if (itemCalcKgCheck && itemCalcSakCheck && itemQuantityKg && itemQuantitySacks) {
+// Normalize input display: convert commas to dots while still parsing as decimal
+if (itemQuantityKg) {
+    itemQuantityKg.addEventListener('input', function() {
+        if (this.value && this.value.indexOf(',') !== -1) {
+            this.value = this.value.replace(/,/g, '.');
+        }
+    });
+}
+if (itemQuantitySacks) {
+    itemQuantitySacks.addEventListener('input', function() {
+        if (this.value && this.value.indexOf(',') !== -1) {
+            this.value = this.value.replace(/,/g, '.');
+        }
+    });
+}
+
+if (itemCalcKgCheck && itemCalcSakCheck && itemQuantityKg && itemQuantitySacks) {
         itemCalcKgCheck.addEventListener('change', function() {
             if (this.checked) {
                 itemCalcSakCheck.checked = false;

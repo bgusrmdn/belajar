@@ -1744,8 +1744,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!opt) return;
       const date = opt.dataset.date || '';
       const batchNum = opt.dataset.batch_number || '';
-      const sisa = Number.parseFloat(opt.dataset.sisa || '0');
-      opt.textContent = `Tgl: ${date} - Batch: ${batchNum || 'N/A'} (Sisa 501: ${isFinite(sisa) ? sisa.toFixed(2) : '0.00'} Kg)`;
+      const raw = (opt.dataset.sisa_raw ?? opt.dataset.sisa ?? '').toString();
+      // Display exactly as entered/original (preserve commas/points and scale)
+      const display = raw !== '' ? raw.replace('.', ',') : '0';
+      opt.textContent = `Tgl: ${date} - Batch: ${batchNum || 'N/A'} (Sisa 501: ${display} Kg)`;
     }
 
     function populate501OptionsEmbedded(productId, data) {
@@ -1753,13 +1755,15 @@ document.addEventListener("DOMContentLoaded", () => {
       batchSelect501.innerHTML = '<option value="" selected disabled>-- Pilih Batch --</option>';
       if (data && data.length > 0) {
         data.forEach((batch) => {
-          const sisa = Number.parseFloat(batch.sisa_lot_number ?? batch.remaining_501 ?? 0);
+          const raw = (batch.sisa_lot_number ?? batch.remaining_501 ?? '0').toString();
+          const sisa = Number.parseFloat(raw.replace(',', '.'));
           if (sisa > 0) {
             const option = document.createElement('option');
             option.value = batch.id;
             option.dataset.date = batch.transaction_date || '';
             option.dataset.batch_number = batch.batch_number || '';
             option.dataset.sisa = String(sisa);
+            option.dataset.sisa_raw = raw; // keep original formatting
             update501OptionLabel(option);
             batchSelect501.appendChild(option);
           }
@@ -1813,15 +1817,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (batchSelect501 && sisaDisplay501 && qty501Input) {
       batchSelect501.addEventListener('change', function() {
         const sel = this.options[this.selectedIndex];
-        const sisa = Number.parseFloat(sel?.dataset?.sisa || '0');
-        sisaDisplay501.value = isFinite(sisa) ? sisa.toFixed(2) : '0.00';
+        const raw = sel?.dataset?.sisa_raw ?? sel?.dataset?.sisa ?? '';
+        const sisa = Number.parseFloat((raw || '0').toString().replace(',', '.'));
+        // Display exactly as original (use comma in UI)
+        sisaDisplay501.value = raw ? raw.replace('.', ',') : '0';
         qty501Input.value = '';
         qty501Input.max = isFinite(sisa) ? String(sisa) : '';
       });
       qty501Input.addEventListener('input', function() {
         const max = Number.parseFloat(this.max) || 0;
-        const val = Number.parseFloat(this.value) || 0;
-        if (max > 0 && val > max) this.value = String(max);
+        const val = Number.parseFloat((this.value || '0').toString().replace(',', '.')) || 0;
+        if (max > 0 && val > max) this.value = String(max).replace('.', ',');
       });
     }
 
@@ -1933,13 +1939,17 @@ document.addEventListener("DOMContentLoaded", () => {
             // Restore sisa back to option if still present in list
             const opt = Array.from(batchSelect501?.options || []).find(o => o.value === removed.incoming_id);
             if (opt) {
-              const restored = (Number.parseFloat(opt.dataset.sisa || '0') || 0) + (Number.parseFloat(removed.lot_number || '0') || 0);
+              const baseRaw = (opt.dataset.sisa_raw ?? opt.dataset.sisa ?? '0').toString();
+              const base = Number.parseFloat(baseRaw.replace(',', '.')) || 0;
+              const add = Number.parseFloat((removed.lot_number || '0').toString().replace(',', '.')) || 0;
+              const restored = base + add;
               opt.dataset.sisa = String(restored);
+              opt.dataset.sisa_raw = (baseRaw && baseRaw.includes(',')) ? String(restored).replace('.', ',') : String(restored);
               opt.disabled = false;
               update501OptionLabel(opt);
               // If this option is currently selected, update display
               if (batchSelect501 && batchSelect501.value === opt.value) {
-                if (sisaDisplay501) sisaDisplay501.value = restored.toFixed(2);
+                if (sisaDisplay501) sisaDisplay501.value = (opt.dataset.sisa_raw || String(restored)).replace('.', ',');
                 if (qty501Input) qty501Input.max = String(restored);
               }
             }
@@ -2068,11 +2078,11 @@ document.addEventListener("DOMContentLoaded", () => {
             '<option value="" selected disabled>-- Pilih Batch --</option>';
           if (data && data.length > 0) {
             data.forEach((batch) => {
-              const sisa_501 = formatAngkaJS(batch.sisa_lot_number);
+              const raw = (batch.sisa_lot_number ?? '').toString();
               const optionText = `Tgl: ${batch.transaction_date} - Batch: ${
                 batch.batch_number || "N/A"
-              } (Sisa 501: ${sisa_501} Kg)`;
-              batchSelect501.innerHTML += `<option value="${batch.id}" data-sisa="${batch.sisa_lot_number}">${optionText}</option>`;
+              } (Sisa 501: ${raw.replace('.', ',')} Kg)`;
+              batchSelect501.innerHTML += `<option value="${batch.id}" data-sisa="${Number.parseFloat(raw.replace(',', '.'))}" data-sisa-raw="${raw}">${optionText}</option>`;
             });
           } else {
             batchSelect501.innerHTML =
