@@ -1468,13 +1468,26 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       itemsListTbody.innerHTML = '';
       normalItems.forEach((item, index) => {
-        const row = `<tr><td>${index + 1}</td><td class="text-start">${
-          item.product_name
-        }<br><small class="text-muted">${item.sku || ""}</small></td><td>${
-          item.batch_number
-        }</td><td>${formatAngkaJS(item.qty_kg)}</td><td>${formatAngkaJS(
-          item.qty_sak
-        )}</td><td><button type="button" class="btn btn-danger btn-sm" data-index="${index}"><i class="bi bi-trash3-fill"></i></button></td></tr>`;
+        const row = `<tr>
+          <td>${index + 1}</td>
+          <td class="text-start">${item.product_name}<br><small class="text-muted">${item.sku || ""}</small></td>
+          <td>${item.batch_number}</td>
+          <td>
+            <div class="d-flex align-items-center gap-1">
+              <span>${formatAngkaJS(item.qty_kg)}</span>
+              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" data-copy="${formatAngkaJS(item.qty_kg)}" title="Copy Kg"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-1">
+              <span>${formatAngkaJS(item.qty_sak)}</span>
+              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" data-copy="${formatAngkaJS(item.qty_sak)}" title="Copy Sak"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </td>
+          <td>
+            <button type="button" class="btn btn-danger btn-sm" data-index="${index}"><i class="bi bi-trash3-fill"></i></button>
+          </td>
+        </tr>`;
         itemsListTbody.innerHTML += row;
       });
     }
@@ -1569,6 +1582,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     itemsListTbody.addEventListener("click", (e) => {
+      const copyBtn = e.target.closest('button[data-copy]');
+      if (copyBtn && navigator.clipboard) {
+        const val = copyBtn.getAttribute('data-copy') || '';
+        navigator.clipboard.writeText(val).then(() => {
+          const prev = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+          setTimeout(() => { copyBtn.innerHTML = prev; }, 1200);
+        });
+        return;
+      }
       const deleteButton = e.target.closest("button");
       if (deleteButton && deleteButton.dataset.index) {
         const indexToRemove = Number.parseInt(deleteButton.dataset.index, 10);
