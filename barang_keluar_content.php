@@ -266,11 +266,11 @@ $query_params = $_GET;
                                     <!-- Qty (Kg) -->
                                     <td class="text-nowrap">
         
-                                        <span class="badge bg-primary fs-6"><?= formatAngka($tx['quantity_kg']) ?></span>
+                                        <span class="badge bg-primary fs-6"><?= formatAngkaUI($tx['quantity_kg']) ?></span>
                                     </td>
                                     <!-- Qty (Sak) -->
                                     <td class="text-nowrap">
-                                        <span class="badge bg-secondary fs-6"><?= formatAngka($tx['quantity_sacks']) ?></span>
+                                        <span class="badge bg-secondary fs-6"><?= formatAngkaUI($tx['quantity_sacks']) ?></span>
                                     </td>
                                     <!-- No. Dokumen -->
                                     <td class="text-truncate" style="max-width: 140px;">

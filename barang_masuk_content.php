@@ -263,10 +263,10 @@ $query_params = $_GET;
                                     </span>
                                 </td>
                                 <td class="text-nowrap">
-                                    <span class="badge bg-primary fs-6"><?= formatAngka($tx['quantity_kg']) ?> kg</span>
+                                    <span class="badge bg-primary fs-6"><?= formatAngkaUI($tx['quantity_kg']) ?> kg</span>
                                 </td>
                                 <td class="text-nowrap">
-                                    <span class="badge bg-secondary fs-6"><?= formatAngka($tx['quantity_sacks']) ?> sak</span>
+                                    <span class="badge bg-secondary fs-6"><?= formatAngkaUI($tx['quantity_sacks']) ?> sak</span>
                                 </td>
                                 <td class="text-nowrap">
                                     <span class="badge bg-warning text-dark fs-6"><?= formatAngka($tx['lot_number']) ?></span>

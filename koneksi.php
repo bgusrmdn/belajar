@@ -83,4 +83,38 @@ function formatAngka($angka) {
     }
     return $str;
 }
+
+/**
+ * Format angka untuk UI (tampilan) menggunakan koma sebagai pemisah desimal,
+ * mempertahankan jumlah digit desimal asli tanpa pembulatan berlebih.
+ */
+function formatAngkaUI($angka) {
+    if ($angka === null || $angka === '') return '';
+    // Jadikan string agar bisa menghitung panjang desimal asli
+    $raw = (string)$angka;
+    $raw = trim($raw);
+    // Normalisasi untuk validasi numerik
+    $normalized = str_replace(',', '.', $raw);
+    if (!is_numeric($normalized)) return $raw;
+    // Cari separator desimal asli (',' atau '.')
+    $posComma = strrpos($raw, ',');
+    $posDot = strrpos($raw, '.');
+    $sepPos = $posComma !== false ? $posComma : $posDot;
+    $decLen = 0;
+    if ($sepPos !== false) {
+        $decPart = substr($raw, $sepPos + 1);
+        // Hilangkan trailing zero di UI agar tidak menampilkan nol berlebih
+        $decPart = rtrim($decPart, '0');
+        $decLen = strlen($decPart);
+        $decLen = max(0, min(12, $decLen));
+    }
+    $num = (float)$normalized;
+    if ($decLen <= 0) {
+        // Tanpa desimal
+        return str_replace('.', ',', (string)$num);
+    }
+    // Format dengan koma sebagai pemisah desimal dan tanpa pemisah ribuan
+    $formatted = number_format($num, $decLen, ',', '');
+    return $formatted;
+}
 ?>
