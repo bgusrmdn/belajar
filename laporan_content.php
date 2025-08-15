@@ -155,15 +155,15 @@ foreach ($results as $row) {
                                     <td class="text-center border fw-bold text-dark"><?= $nomor++ ?></td>
                                     <td class="text-center border fw-semibold text-dark"><?= htmlspecialchars($data['sku']) ?></td>
                                     <td class="text-start border fw-semibold text-dark"><?= htmlspecialchars($data['product_name']) ?></td>
-                                    <td class="text-center align-middle border text-dark"><?= formatAngka($data['opening_stock_kg']) ?></td>
-                                    <td class="text-center align-middle border text-dark"><?= formatAngka($data['opening_stock_sak']) ?></td>
-                                    <td class="text-center align-middle border fw-bold" style="color: #2e7d32;"><?= formatAngka($data['incoming_kg_today']) ?></td>
-                                    <td class="text-center align-middle border fw-bold" style="color: #2e7d32;"><?= formatAngka($data['incoming_sak_today']) ?></td>
-                                    <td class="text-center align-middle border fw-bold" style="color: #d32f2f;"><?= formatAngka($data['outgoing_kg_today']) ?></td>
-                                    <td class="text-center align-middle border fw-bold" style="color: #d32f2f;"><?= formatAngka($data['outgoing_sak_today']) ?></td>
-                                    <td class="text-center align-middle border fw-bold" style="color: #1976d2;"><?= formatAngka($data['closing_stock_kg']) ?></td>
-                                    <td class="text-center align-middle border fw-bold" style="color: #1976d2;"><?= formatAngka($data['closing_stock_sak']) ?></td>
-                                    <td class="text-center align-middle border text-dark"><?= formatAngka($data['average_qty']) ?></td>
+                                    <td class="text-center align-middle border text-dark"><?= formatAngkaUI($data['opening_stock_kg']) ?></td>
+                                    <td class="text-center align-middle border text-dark"><?= formatAngkaUI($data['opening_stock_sak']) ?></td>
+                                    <td class="text-center align-middle border fw-bold" style="color: #2e7d32;"><?= formatAngkaUI($data['incoming_kg_today']) ?></td>
+                                    <td class="text-center align-middle border fw-bold" style="color: #2e7d32;"><?= formatAngkaUI($data['incoming_sak_today']) ?></td>
+                                    <td class="text-center align-middle border fw-bold" style="color: #d32f2f;"><?= formatAngkaUI($data['outgoing_kg_today']) ?></td>
+                                    <td class="text-center align-middle border fw-bold" style="color: #d32f2f;"><?= formatAngkaUI($data['outgoing_sak_today']) ?></td>
+                                    <td class="text-center align-middle border fw-bold" style="color: #1976d2;"><?= formatAngkaUI($data['closing_stock_kg']) ?></td>
+                                    <td class="text-center align-middle border fw-bold" style="color: #1976d2;"><?= formatAngkaUI($data['closing_stock_sak']) ?></td>
+                                    <td class="text-center align-middle border text-dark"><?= formatAngkaUI($data['average_qty']) ?></td>
                                 </tr>
                         <?php endforeach;
                         endif; ?>

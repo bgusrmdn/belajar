@@ -89,10 +89,12 @@ header('Cache-Control: no-cache, must-revalidate');
 header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
 
 echo "\xEF\xBB\xBF";
+// Instruct spreadsheet apps to use semicolon as separator
+echo "sep=;\n";
 
 $output = fopen('php://output', 'w');
 
-$header = ['Nama Barang', 'Kode Barang', 'Qty (Sak)', 'Qty (Kg)', 'Keterangan'];
+$header = ['Nama Barang', 'Kode Barang', 'Qty (Sak)', 'Qty (Kg)', 'Keterangan', 'No. Dokumen'];
 fputcsv($output, $header, ';', '"'); // Gunakan semicolon sebagai delimiter dan quote untuk escape
 
 function cleanCsvValue($value) {
@@ -109,7 +111,8 @@ foreach ($results as $row) {
         cleanCsvValue($row['sku'] ?? ''),
         cleanCsvValue(formatAngka($row['quantity_sacks'] ?? 0)),
         cleanCsvValue(formatAngka($row['quantity_kg'] ?? 0)),
-        cleanCsvValue($row['description'] ?? '')
+        cleanCsvValue($row['description'] ?? ''),
+        cleanCsvValue($row['document_number'] ?? '')
     ];
     fputcsv($output, $csv_row, ';', '"'); // Gunakan semicolon sebagai delimiter dan quote untuk escape
 }

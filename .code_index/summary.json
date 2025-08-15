@@ -1,0 +1,16 @@
+{
+  "repo_root": "/workspace",
+  "total_files": 40,
+  "total_bytes": 1479221,
+  "text_files": 38,
+  "binary_files": 2,
+  "language_counts": {
+    "PHP": 30,
+    "Markdown": 1,
+    "Python": 1,
+    "CSS": 2,
+    "JavaScript": 2
+  },
+  "generated_at": "2025-08-14T13:48:59.734782+00:00",
+  "index_file": "/workspace/.code_index/index.jsonl"
+}

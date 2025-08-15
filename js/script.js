@@ -33,6 +33,9 @@ function initializeApp() {
 
   // Set default dates
   setDefaultDates();
+
+  // Global product autocomplete overlays (always on top)
+  initializeGlobalProductAutocomplete();
 }
 
 function loadProductsData() {
@@ -311,8 +314,7 @@ function calculateKgFromSacks() {
   if (selectedProduct && sacksInput.value) {
     const sacks = Number.parseFloat(sacksInput.value);
     const standardQty = selectedProduct.standard_qty;
-    const kg = (sacks * standardQty).toFixed(2);
-    kgInput.value = kg;
+    kgInput.value = (sacks && standardQty) ? String(sacks * standardQty) : "";
   }
 }
 
@@ -588,10 +590,9 @@ function calculateSacksForItem(counter) {
   const selectedProduct = productsData.find((p) => p.id === productId);
 
   if (selectedProduct && quantityInput.value) {
-    const kg = Number.parseFloat(quantityInput.value);
+    const kg = Number.parseFloat((quantityInput.value || '').toString().replace(',', '.'));
     const standardQty = selectedProduct.standard_qty;
-    const sacks = (kg / standardQty).toFixed(2);
-    sacksInput.value = sacks;
+    sacksInput.value = (kg && standardQty) ? String(kg / standardQty) : '';
   }
 }
 
@@ -933,15 +934,15 @@ function renderOutgoingItemsList() {
     const tdKg = document.createElement('td');
     const kgSpan = document.createElement('span');
     kgSpan.className = 'badge bg-primary';
-    const kg = parseFloat(item.qty_kg ?? item.quantity_kg);
-    kgSpan.textContent = isFinite(kg) ? formatNumberDisplay(kg) : '';
+      const kgRaw = (item.quantity_kg_display ?? item.qty_kg ?? item.quantity_kg);
+  kgSpan.textContent = (kgRaw !== undefined && kgRaw !== null && String(kgRaw) !== '') ? String(kgRaw).replace('.', ',') : '';
     tdKg.appendChild(kgSpan);
 
     const tdSak = document.createElement('td');
     const sakSpan = document.createElement('span');
     sakSpan.className = 'badge bg-secondary';
-    const sak = parseFloat(item.qty_sak ?? item.quantity_sacks);
-    sakSpan.textContent = isFinite(sak) ? formatNumberDisplay(sak) : '';
+      const sakRaw = (item.quantity_sacks_display ?? item.qty_sak ?? item.quantity_sacks);
+  sakSpan.textContent = (sakRaw !== undefined && sakRaw !== null && String(sakRaw) !== '') ? String(sakRaw).replace('.', ',') : '';
     tdSak.appendChild(sakSpan);
 
     const tdAct = document.createElement('td');
@@ -1003,10 +1004,9 @@ window.addOutgoingItem = addOutgoingItem;
 document.addEventListener("DOMContentLoaded", () => {
   // Helper function untuk format angka di JS
   function formatAngkaJS(angka) {
-    if (angka === null || isNaN(Number.parseFloat(angka))) return "";
-    const nomor = Number.parseFloat(angka);
-    // Mengganti titik desimal dengan koma
-    return nomor.toString().replace(".", ",");
+    const num = Number.parseFloat(angka);
+    if (!isFinite(num)) return "";
+    return num.toLocaleString('en-US', { maximumFractionDigits: 6, useGrouping: false });
   }
 
   // --- LOGIKA UNTUK HALAMAN DAFTAR PRODUK ---
@@ -1042,7 +1042,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- LOGIKA UNTUK MODAL BARANG MASUK ---
   const incomingModalEl = document.getElementById("incomingTransactionModal");
-  if (incomingModalEl) {
+  if (incomingModalEl && !document.getElementById('datalistProductsIncoming')) {
     const modalTitle = document.getElementById("incomingModalLabel");
     const submitButton = document.getElementById("incomingSubmitButton");
     const modalForm = document.getElementById("incomingTransactionForm");
@@ -1137,13 +1137,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function autoCalculate() {
-      const qtyKg = Number.parseFloat(qtyKgInput.value);
-      const qtySak = Number.parseFloat(qtySakInput.value);
+      const qtyKg = Number.parseFloat((qtyKgInput.value || '').toString().replace(',', '.'));
+      const qtySak = Number.parseFloat((qtySakInput.value || '').toString().replace(',', '.'));
 
       if (calcSakCheck.checked && currentStdQty > 0 && !isNaN(qtyKg)) {
-        qtySakInput.value = (qtyKg / currentStdQty).toFixed(2);
+        qtySakInput.value = String(qtyKg / currentStdQty);
       } else if (calcKgCheck.checked && currentStdQty > 0 && !isNaN(qtySak)) {
-        qtyKgInput.value = (qtySak * currentStdQty).toFixed(2);
+        qtyKgInput.value = String(qtySak * currentStdQty);
       }
     }
 
@@ -1151,7 +1151,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const gross = Number.parseFloat(grossWeightInput.value);
       const net = Number.parseFloat(qtyKgInput.value);
       if (!isNaN(gross) && !isNaN(net)) {
-        lotNumberDisplay.value = (gross - net).toFixed(2);
+        lotNumberDisplay.value = String(gross - net);
       } else {
         lotNumberDisplay.value = "";
       }
@@ -1287,12 +1287,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if (currentSisa > 0) {
             const sisa_kg_formatted = formatAngkaJS(currentSisa);
+            const sisa_sak = outgoingCurrentStdQty > 0 ? currentSisa / outgoingCurrentStdQty : 0;
+            const sisa_sak_formatted = formatAngkaJS(sisa_sak);
             const optionText = `Tgl: ${batch.transaction_date} - Batch: ${
               batch.batch_number || "N/A"
-            } (Sisa: ${sisa_kg_formatted} Kg)`;
+            } (Sisa: ${sisa_kg_formatted} Kg / ${sisa_sak_formatted} Sak)`;
             itemIncomingSelect.innerHTML += `<option value="${
               batch.id
-            }" data-sisa_kg="${currentSisa}" data-batch_number="${
+            }" data-sisa_kg="${currentSisa}" data-sisa_sak="${sisa_sak}" data-batch_number="${
               batch.batch_number || ""
             }">${optionText}</option>`;
             availableBatches++;
@@ -1410,7 +1412,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function autoCalculateOutgoing() {
-      const qtyKg = Number.parseFloat(itemQtyKg.value);
+      const qtyKg = Number.parseFloat((itemQtyKg.value || '').toString().replace(',', '.'));
       const qtySak = Number.parseFloat(itemQtySacks.value);
 
       if (
@@ -1418,13 +1420,13 @@ document.addEventListener("DOMContentLoaded", () => {
         outgoingCurrentStdQty > 0 &&
         !isNaN(qtyKg)
       ) {
-        itemQtySacks.value = (qtyKg / outgoingCurrentStdQty).toFixed(2);
+        itemQtySacks.value = String(qtyKg / outgoingCurrentStdQty);
       } else if (
         outgoingCalcKgCheck.checked &&
         outgoingCurrentStdQty > 0 &&
         !isNaN(qtySak)
       ) {
-        itemQtyKg.value = (qtySak * outgoingCurrentStdQty).toFixed(2);
+        itemQtyKg.value = String(qtySak * outgoingCurrentStdQty);
       }
     }
 
@@ -1456,19 +1458,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderItemsTable() {
       itemsListTbody.innerHTML = "";
-      if (outgoingItems.length === 0) {
+      const normalItems = (outgoingItems || []).filter(it => !(Number.parseFloat(it.lot_number || '0') > 0));
+      if (normalItems.length === 0) {
         itemsListTbody.innerHTML =
           '<tr><td colspan="6" class="text-center text-muted">Belum ada item yang ditambahkan.</td></tr>';
         return;
       }
-      outgoingItems.forEach((item, index) => {
-        const row = `<tr><td>${index + 1}</td><td class="text-start">${
-          item.product_name
-        }<br><small class="text-muted">${item.sku || ""}</small></td><td>${
-          item.batch_number
-        }</td><td>${formatAngkaJS(item.qty_kg)}</td><td>${formatAngkaJS(
-          item.qty_sak
-        )}</td><td><button type="button" class="btn btn-danger btn-sm" data-index="${index}"><i class="bi bi-trash3-fill"></i></button></td></tr>`;
+      itemsListTbody.innerHTML = '';
+      normalItems.forEach((item, index) => {
+        const row = `<tr>
+          <td>${index + 1}</td>
+          <td class="text-start">${item.product_name}<br><div class="d-flex align-items-center gap-1"><small class="text-muted">${item.sku || ""}</small><button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" data-copy="${item.sku || ""}" title="Copy Kode"><i class="bi bi-clipboard"></i></button></div></td>
+          <td><div class="d-flex align-items-center gap-1"><span>${item.batch_number}</span><button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" data-copy="${item.batch_number}" title="Copy Batch"><i class="bi bi-clipboard"></i></button></div></td>
+          <td>
+            <div class="d-flex align-items-center gap-1">
+              <span>${formatAngkaJS(item.qty_kg)}</span>
+              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" data-copy="${formatAngkaJS(item.qty_kg)}" title="Copy Kg"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-1">
+              <span>${formatAngkaJS(item.qty_sak)}</span>
+              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" data-copy="${formatAngkaJS(item.qty_sak)}" title="Copy Sak"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </td>
+          <td>
+            <button type="button" class="btn btn-danger btn-sm" data-index="${index}"><i class="bi bi-trash3-fill"></i></button>
+          </td>
+        </tr>`;
         itemsListTbody.innerHTML += row;
       });
     }
@@ -1479,7 +1496,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       const batchOption =
         itemIncomingSelect.options[itemIncomingSelect.selectedIndex];
-      const qtyKgDiminta = Number.parseFloat(itemQtyKg.value);
+      const qtyKgDiminta = Number.parseFloat((itemQtyKg.value || '').toString().replace(',', '.'));
 
       if (
         !productOption ||
@@ -1507,10 +1524,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const kekurangan = qtyKgDiminta - sisaStok;
         Swal.fire({
           title: "Stok Tidak Cukup",
-          text: `Hanya ${formatAngkaJS(
-            sisaStok
-          )} Kg yang ditambahkan. Kekurangan ${formatAngkaJS(kekurangan)} Kg.`,
+          html: `<div class="text-start small">
+                   <div>Hanya <strong>${formatAngkaJS(sisaStok)} Kg</strong> yang ditambahkan.</div>
+                   <div class="mt-2">Kekurangan:</div>
+                   <div class="input-group input-group-sm mt-1">
+                     <input id="copyKekurangan" class="form-control" type="text" value="${formatAngkaJS(kekurangan)}" readonly>
+                     <button type="button" class="btn btn-outline-primary" id="btnCopyKekurangan"><i class="bi bi-clipboard me-1"></i>Copy</button>
+                   </div>
+                 </div>`,
           icon: "info",
+          showConfirmButton: true,
+          confirmButtonText: "OK",
+          didOpen: () => {
+            const btn = document.getElementById('btnCopyKekurangan');
+            const inp = document.getElementById('copyKekurangan');
+            if (btn && inp && navigator.clipboard) {
+              btn.addEventListener('click', () => {
+                navigator.clipboard.writeText(inp.value).then(() => {
+                  btn.innerHTML = '<i class="bi bi-clipboard-check me-1"></i>Tersalin';
+                  setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy'; }, 1500);
+                });
+              });
+            }
+          }
         });
       }
 
@@ -1544,6 +1580,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     itemsListTbody.addEventListener("click", (e) => {
+      const copyBtn = e.target.closest('button[data-copy]');
+      if (copyBtn && navigator.clipboard) {
+        const val = copyBtn.getAttribute('data-copy') || '';
+        navigator.clipboard.writeText(val).then(() => {
+          const prev = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+          setTimeout(() => { copyBtn.innerHTML = prev; }, 1200);
+        });
+        return;
+      }
       const deleteButton = e.target.closest("button");
       if (deleteButton && deleteButton.dataset.index) {
         const indexToRemove = Number.parseInt(deleteButton.dataset.index, 10);
@@ -1631,8 +1677,31 @@ document.addEventListener("DOMContentLoaded", () => {
             if (originalDocHidden && !originalDocHidden.value) {
               originalDocHidden.value = data.main.document_number || '';
             }
-            outgoingItems = data.items.map((item) => ({ ...item }));
+            // Split items: normal vs 501 (lot_number > 0)
+            const normal = [];
+            const only501 = [];
+            (data.items || []).forEach((it) => {
+              const lot = Number.parseFloat(it.lot_number || '0');
+              if (lot > 0) {
+                only501.push({
+                  product_id: it.product_id,
+                  product_name: it.product_name,
+                  sku: it.sku,
+                  incoming_id: it.incoming_id,
+                  batch_number: it.batch_number,
+                  qty_kg: 0,
+                  qty_sak: 0,
+                  lot_number: lot
+                });
+              } else {
+                normal.push({ ...it });
+              }
+            });
+            outgoingItems = normal.map((item, index) => ({ ...item }));
             renderItemsTable();
+            // Fill embedded 501 tab list
+            embedded501Items = only501;
+            renderEmbedded501List();
           })
           .catch((err) => {
             console.error("Fetch Error:", err);
@@ -1659,6 +1728,238 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       hiddenJsonInput.value = JSON.stringify(outgoingItems);
     });
+
+    // Add embedded 501 handlers inside outgoing modal
+    const productName501 = document.getElementById('keluar501_product_name_embedded');
+    const productId501Hidden = document.getElementById('keluar501_product_id_embedded');
+    const skuDisplay501 = document.getElementById('keluar501_sku_display_embedded');
+    const datalistOutgoing = document.getElementById('datalistProductsOutgoing');
+    const batchSelect501 = document.getElementById('keluar501_batch_select_embedded');
+    const sisaDisplay501 = document.getElementById('keluar501_sisa_display_embedded');
+    const qty501Input = document.getElementById('keluar501_quantity_embedded');
+
+    const batches501Cache = {};
+
+    function update501OptionLabel(opt) {
+      if (!opt) return;
+      const date = opt.dataset.date || '';
+      const batchNum = opt.dataset.batch_number || '';
+      const sisa = Number.parseFloat(opt.dataset.sisa || '0');
+      opt.textContent = `Tgl: ${date} - Batch: ${batchNum || 'N/A'} (Sisa 501: ${isFinite(sisa) ? sisa.toFixed(2) : '0.00'} Kg)`;
+    }
+
+    function populate501OptionsEmbedded(productId, data) {
+      if (!batchSelect501) return;
+      batchSelect501.innerHTML = '<option value="" selected disabled>-- Pilih Batch --</option>';
+      if (data && data.length > 0) {
+        data.forEach((batch) => {
+          const sisa = Number.parseFloat(batch.sisa_lot_number ?? batch.remaining_501 ?? 0);
+          if (sisa > 0) {
+            const option = document.createElement('option');
+            option.value = batch.id;
+            option.dataset.date = batch.transaction_date || '';
+            option.dataset.batch_number = batch.batch_number || '';
+            option.dataset.sisa = String(sisa);
+            update501OptionLabel(option);
+            batchSelect501.appendChild(option);
+          }
+        });
+      } else {
+        batchSelect501.innerHTML = '<option value="">-- Tidak ada batch dengan sisa 501 --</option>';
+      }
+      batchSelect501.disabled = false;
+    }
+
+    function load501BatchesEmbedded(productId) {
+      if (!productId || !batchSelect501) return;
+      batchSelect501.innerHTML = '<option value="">Memuat batch...</option>';
+      batchSelect501.disabled = true;
+      sisaDisplay501 && (sisaDisplay501.value = '0.00');
+      qty501Input && (qty501Input.value = '');
+      if (batches501Cache[productId]) {
+        populate501OptionsEmbedded(productId, batches501Cache[productId]);
+        return;
+      }
+      fetch(`api_get_batches_501.php?product_id=${productId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          batches501Cache[productId] = data || [];
+          populate501OptionsEmbedded(productId, batches501Cache[productId]);
+        })
+        .catch(() => {
+          batchSelect501.innerHTML = '<option value="">Gagal memuat batch</option>';
+          batchSelect501.disabled = false;
+        });
+    }
+
+    if (productName501 && datalistOutgoing) {
+      productName501.addEventListener('input', () => {
+        const opt = Array.from(datalistOutgoing.options).find(o => o.value === productName501.value);
+        if (opt) {
+          if (productId501Hidden) productId501Hidden.value = opt.dataset.id || '';
+          if (skuDisplay501) skuDisplay501.textContent = opt.dataset.sku ? `Kode: ${opt.dataset.sku}` : '';
+          load501BatchesEmbedded(opt.dataset.id);
+        } else {
+          if (productId501Hidden) productId501Hidden.value = '';
+          if (skuDisplay501) skuDisplay501.textContent = '';
+          if (batchSelect501) {
+            batchSelect501.innerHTML = '<option value="">-- Pilih produk terlebih dahulu --</option>';
+            batchSelect501.disabled = true;
+          }
+        }
+      });
+    }
+
+    if (batchSelect501 && sisaDisplay501 && qty501Input) {
+      batchSelect501.addEventListener('change', function() {
+        const sel = this.options[this.selectedIndex];
+        const sisa = Number.parseFloat(sel?.dataset?.sisa || '0');
+        sisaDisplay501.value = isFinite(sisa) ? sisa.toFixed(2) : '0.00';
+        qty501Input.value = '';
+        qty501Input.max = isFinite(sisa) ? String(sisa) : '';
+      });
+      qty501Input.addEventListener('input', function() {
+        const max = Number.parseFloat(this.max) || 0;
+        const val = Number.parseFloat(this.value) || 0;
+        if (max > 0 && val > max) this.value = String(max);
+      });
+    }
+
+    // Hook submit to include 501 as separate item if filled
+    const outgoingForm = document.getElementById('outgoingTransactionForm');
+    const itemsJsonHidden = document.getElementById('items_json');
+    if (outgoingForm && itemsJsonHidden) {
+      outgoingForm.addEventListener('submit', (e) => {
+        try {
+          const list = JSON.parse(itemsJsonHidden.value || '[]');
+          const pid = productId501Hidden?.value;
+          const sel = batchSelect501?.options[batchSelect501.selectedIndex];
+          const qty501 = Number.parseFloat(qty501Input?.value || '0');
+          if (pid && sel && isFinite(qty501) && qty501 > 0) {
+            const productOpt = Array.from(datalistOutgoing?.options || []).find(o => o.dataset.id === pid);
+            const stdQty = Number.parseFloat(productOpt?.dataset?.stdqty || '0');
+            const qtySak = stdQty > 0 ? qty501 / stdQty : 0;
+            list.push({
+              product_id: pid,
+              product_name: productOpt?.value || '',
+              sku: productOpt?.dataset?.sku || '',
+              incoming_id: sel.value,
+              batch_number: sel.dataset.batch_number || '',
+              qty_kg: 0,
+              qty_sak: 0,
+              lot_number: qty501
+            });
+            itemsJsonHidden.value = JSON.stringify(list);
+          }
+        } catch (_) { /* ignore */ }
+      });
+    }
+
+    // 501 embedded list elements
+    const addItem501Btn = document.getElementById('addItem501OutgoingBtn');
+    const items501Tbody = document.getElementById('outgoing_items_501_list');
+    let embedded501Items = [];
+
+    function renderEmbedded501List() {
+      if (!items501Tbody) return;
+      if (!embedded501Items.length) {
+        items501Tbody.innerHTML = `
+          <tr>
+            <td colspan=\"5\" class=\"text-center text-muted p-4\">
+              <i class=\"bi bi-inbox display-6 d-block mb-2 opacity-50\"></i>
+              <span>Belum ada item 501 yang ditambahkan</span>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      items501Tbody.innerHTML = '';
+      embedded501Items.forEach((it, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class=\"fw-bold\">${idx + 1}</td>
+          <td class=\"text-start\">${it.product_name}<br><small class=\"text-muted\">${it.sku || ''}</small></td>
+          <td><span class=\"badge bg-info text-white\">${it.batch_number}</span></td>
+          <td class=\"fw-bold text-success\">${formatAngkaJS(it.lot_number)} Kg</td>
+          <td class=\"text-center\">\n            <button type=\"button\" class=\"btn btn-outline-danger btn-sm\" data-index=\"${idx}\"><i class=\"bi bi-trash3\"></i></button>\n          </td>
+        `;
+        items501Tbody.appendChild(tr);
+      });
+    }
+
+    if (addItem501Btn) {
+      addItem501Btn.addEventListener('click', () => {
+        const pid = productId501Hidden?.value;
+        const sel = batchSelect501?.options[batchSelect501.selectedIndex];
+        const qty501 = Number.parseFloat(qty501Input?.value || '0');
+        if (!pid) { Swal?.fire?.('Oops...', 'Pilih Nama Barang 501 terlebih dahulu.', 'warning'); return; }
+        if (!sel || !sel.value) { Swal?.fire?.('Oops...', 'Pilih Batch 501 terlebih dahulu.', 'warning'); return; }
+        if (!(qty501 > 0)) { Swal?.fire?.('Oops...', 'Masukkan jumlah 501 (Kg) yang valid.', 'warning'); return; }
+
+        const sisaBefore = Number.parseFloat(sel.dataset.sisa || '0');
+        if (qty501 > sisaBefore) { Swal?.fire?.('Oops...', `Maksimum ${sisaBefore.toFixed(2)} Kg.`, 'warning'); return; }
+
+        const productOpt = Array.from(datalistOutgoing?.options || []).find(o => o.dataset.id === pid);
+        const item = {
+          product_id: pid,
+          product_name: productOpt?.value || '',
+          sku: productOpt?.dataset?.sku || '',
+          incoming_id: sel.value,
+          batch_number: sel.dataset.batch_number || '',
+          qty_kg: 0,
+          qty_sak: 0,
+          lot_number: qty501
+        };
+        embedded501Items.push(item);
+        renderEmbedded501List();
+
+        // Realtime decrement sisa on selected option
+        const newSisa = Math.max(0, sisaBefore - qty501);
+        sel.dataset.sisa = String(newSisa);
+        update501OptionLabel(sel);
+        if (sisaDisplay501) sisaDisplay501.value = newSisa.toFixed(2);
+        if (qty501Input) { qty501Input.value = ''; qty501Input.max = String(newSisa); }
+        if (newSisa <= 0) { sel.disabled = true; }
+      });
+
+      if (items501Tbody) {
+        items501Tbody.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-index]');
+          if (!btn) return;
+          const idx = Number.parseInt(btn.dataset.index, 10);
+          if (idx >= 0) {
+            const removed = embedded501Items.splice(idx, 1)[0];
+            renderEmbedded501List();
+            // Restore sisa back to option if still present in list
+            const opt = Array.from(batchSelect501?.options || []).find(o => o.value === removed.incoming_id);
+            if (opt) {
+              const restored = (Number.parseFloat(opt.dataset.sisa || '0') || 0) + (Number.parseFloat(removed.lot_number || '0') || 0);
+              opt.dataset.sisa = String(restored);
+              opt.disabled = false;
+              update501OptionLabel(opt);
+              // If this option is currently selected, update display
+              if (batchSelect501 && batchSelect501.value === opt.value) {
+                if (sisaDisplay501) sisaDisplay501.value = restored.toFixed(2);
+                if (qty501Input) qty501Input.max = String(restored);
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Merge embedded 501 items into items_json on submit
+    if (outgoingForm && itemsJsonHidden) {
+      outgoingForm.addEventListener('submit', (e) => {
+        try {
+          const list = JSON.parse(itemsJsonHidden.value || '[]');
+          if (embedded501Items.length) {
+            const merged = list.concat(embedded501Items);
+            itemsJsonHidden.value = JSON.stringify(merged);
+          }
+        } catch (_) { /* ignore */ }
+      });
+    }
   }
   // --- LOGIKA UNTUK HALAMAN KARTU STOK (STOCK JALUR) ---
   const stockJalurPage = document.getElementById("stockJalurPage");
@@ -1787,9 +2088,163 @@ document.addEventListener("DOMContentLoaded", () => {
       if (selectedOption && selectedOption.dataset.sisa) {
         quantityInput501.value = selectedOption.dataset.sisa;
       }
-    });
-  }
+        });
+   }
 });
+ 
+ function initializeGlobalProductAutocomplete() {
+  const CONFIGS = [
+    {
+      inputId: 'item_product_name_incoming',
+      datalistId: 'datalistProductsIncoming',
+      hiddenId: 'item_product_id_hidden',
+      skuDisplayId: 'item_sku_display_incoming'
+    },
+    {
+      inputId: 'item501_product_name',
+      datalistId: 'datalistProductsIncoming',
+      hiddenId: 'item501_product_id_hidden',
+      skuDisplayId: 'item501_sku_display'
+    },
+    {
+      inputId: 'item_product_name_outgoing',
+      datalistId: 'datalistProductsOutgoing',
+      hiddenId: 'item_product_id_hidden',
+      skuDisplayId: 'item_sku_display_outgoing'
+    },
+    {
+      inputId: 'keluar501_product_name_embedded',
+      datalistId: 'datalistProductsOutgoing',
+      hiddenId: 'keluar501_product_id_embedded',
+      skuDisplayId: 'keluar501_sku_display_embedded'
+    }
+  ];
+
+  CONFIGS.forEach((cfg) => {
+    const input = document.getElementById(cfg.inputId);
+    const datalist = document.getElementById(cfg.datalistId);
+    if (!input || !datalist) return;
+    const hidden = cfg.hiddenId ? document.getElementById(cfg.hiddenId) : null;
+    const skuDisplay = cfg.skuDisplayId ? document.getElementById(cfg.skuDisplayId) : null;
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'list-group shadow';
+    Object.assign(dropdown.style, {
+      position: 'fixed',
+      zIndex: '2147483647',
+      display: 'none',
+      maxHeight: '300px',
+      overflowY: 'auto',
+      background: '#fff',
+      borderRadius: '0.375rem',
+      border: '1px solid rgba(0,0,0,.125)'
+    });
+    document.body.appendChild(dropdown);
+
+    let currentIndex = -1;
+    let currentItems = [];
+
+    function positionDropdown() {
+      const rect = input.getBoundingClientRect();
+      dropdown.style.left = `${Math.round(rect.left + window.scrollX)}px`;
+      dropdown.style.top = `${Math.round(rect.bottom + window.scrollY)}px`;
+      dropdown.style.width = `${Math.round(rect.width)}px`;
+    }
+
+    function clearDropdown() {
+      dropdown.innerHTML = '';
+      currentItems = [];
+      currentIndex = -1;
+    }
+
+    function hideDropdown() {
+      dropdown.style.display = 'none';
+      clearDropdown();
+    }
+
+    function showSuggestions(query) {
+      clearDropdown();
+      const q = (query || '').trim().toLowerCase();
+      if (!q) { hideDropdown(); return; }
+      const options = Array.from(datalist.options);
+      let count = 0;
+      for (const opt of options) {
+        const name = (opt.value || '').toLowerCase();
+        const sku = (opt.dataset.sku || '').toLowerCase();
+        if (name.includes(q) || sku.includes(q)) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+          btn.innerHTML = `<span>${opt.value}</span><code class="small">${opt.dataset.sku || ''}</code>`;
+          btn.addEventListener('click', () => selectOption(opt));
+          dropdown.appendChild(btn);
+          currentItems.push({ button: btn, option: opt });
+          count++;
+          if (count >= 20) break;
+        }
+      }
+      if (count === 0) { hideDropdown(); return; }
+      positionDropdown();
+      dropdown.style.display = 'block';
+    }
+
+    function selectOption(opt) {
+      input.value = opt.value || '';
+      if (hidden) hidden.value = opt.dataset.id || '';
+      if (skuDisplay) skuDisplay.textContent = opt.dataset.sku ? `Kode: ${opt.dataset.sku}` : '';
+      hideDropdown();
+      // Trigger input event to let page-specific logic react (e.g., load batches)
+      const evt = new Event('input', { bubbles: true });
+      input.dispatchEvent(evt);
+      input.focus();
+    }
+
+    function moveActive(delta) {
+      if (!currentItems.length) return;
+      currentIndex = (currentIndex + delta + currentItems.length) % currentItems.length;
+      currentItems.forEach((item, idx) => {
+        if (idx === currentIndex) item.button.classList.add('active');
+        else item.button.classList.remove('active');
+      });
+    }
+
+    input.addEventListener('input', () => {
+      showSuggestions(input.value);
+    });
+
+    input.addEventListener('focus', () => {
+      showSuggestions(input.value);
+    });
+
+    input.addEventListener('blur', () => {
+      setTimeout(() => hideDropdown(), 120);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (dropdown.style.display !== 'block') return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(-1); }
+      else if (e.key === 'Enter') {
+        if (currentIndex >= 0 && currentItems[currentIndex]) {
+          e.preventDefault();
+          selectOption(currentItems[currentIndex].option);
+        }
+      } else if (e.key === 'Escape') { hideDropdown(); }
+    });
+
+    window.addEventListener('scroll', () => {
+      if (dropdown.style.display === 'block') positionDropdown();
+    }, true);
+    window.addEventListener('resize', () => {
+      if (dropdown.style.display === 'block') positionDropdown();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target === input || dropdown.contains(e.target)) return;
+      hideDropdown();
+    });
+  });
+}
 
 // Delete confirmation (SweetAlert2)
 if (typeof document !== 'undefined') {

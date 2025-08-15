@@ -138,9 +138,6 @@ $query_params = $_GET;
                     </div>
                 </div>
                 <div class="d-flex gap-1">
-                    <button type="button" class="btn btn-light btn-sm text-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#keluarkan501Modal">
-                        <i class="bi bi-box-arrow-up me-1"></i>501
-                    </button>
                     <button type="button" class="btn btn-warning btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#outgoingTransactionModal">
                         <i class="bi bi-plus-circle-fill me-1"></i>Tambah
                     </button>
@@ -269,11 +266,11 @@ $query_params = $_GET;
                                     <!-- Qty (Kg) -->
                                     <td class="text-nowrap">
         
-                                        <span class="badge bg-primary fs-6"><?= formatAngka($tx['quantity_kg']) ?></span>
+                                        <span class="badge bg-primary fs-6"><?= formatAngkaUI($tx['quantity_kg']) ?></span>
                                     </td>
                                     <!-- Qty (Sak) -->
                                     <td class="text-nowrap">
-                                        <span class="badge bg-secondary fs-6"><?= formatAngka($tx['quantity_sacks']) ?></span>
+                                        <span class="badge bg-secondary fs-6"><?= formatAngkaUI($tx['quantity_sacks']) ?></span>
                                     </td>
                                     <!-- No. Dokumen -->
                                     <td class="text-truncate" style="max-width: 140px;">
@@ -286,7 +283,7 @@ $query_params = $_GET;
                                         <span class="text-muted"><?= htmlspecialchars($tx['description'] ?? '') ?></span>
                                     </td>
                                     <td class="text-nowrap">
-                                        <span class="badge bg-warning text-dark fs-6"><?= formatAngka($tx['lot_number']) ?></span>
+                                        <span class="badge bg-warning text-dark fs-6"><?= formatAngkaUI($tx['lot_number']) ?></span>
                                     </td>
                                     <td class="text-truncate" style="max-width: 100px;">
                                         <span class="badge bg-info text-white" title="<?= htmlspecialchars($tx['batch_number']) ?>">
@@ -449,7 +446,23 @@ foreach ($_GET as $key => $val) {
                 </div>
 
                 <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                    <!-- Header Info -->
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-3" id="outgoingTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-barangkeluar" data-bs-toggle="tab" data-bs-target="#pane-barangkeluar" type="button" role="tab" aria-controls="pane-barangkeluar" aria-selected="true">
+                                <i class="bi bi-box-arrow-up me-1"></i>Barang Keluar
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-501" data-bs-toggle="tab" data-bs-target="#pane-501" type="button" role="tab" aria-controls="pane-501" aria-selected="false">
+                                <i class="bi bi-calculator me-1"></i>Pengeluaran 501
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="outgoingTabsContent">
+                        <div class="tab-pane fade show active" id="pane-barangkeluar" role="tabpanel" aria-labelledby="tab-barangkeluar">
+                            <!-- Header Info -->
                     <div class="card bg-light border-0 mb-4">
                         <div class="card-body">
                             <h6 class="card-title fw-bold text-primary mb-3">
@@ -509,7 +522,7 @@ foreach ($_GET as $key => $val) {
                                     </datalist>
                                     <small id="item_sku_display_outgoing" class="text-muted d-block mt-1"></small>
                                     <!-- Custom autocomplete dropdown (for contains search) -->
-                                    <div id="outgoingAutocompleteList" class="list-group shadow-sm" style="position:absolute; z-index:1055; top:100%; left:0; right:0; display:none; max-height:240px; overflow:auto;"></div>
+                                    
                                     <input type="hidden" id="item_product_id_hidden">
                                 </div>
                                 <div class="col-md-6">
@@ -589,6 +602,104 @@ foreach ($_GET as $key => $val) {
                         </div>
                     </div>
                 </div>
+                        <!-- Tab 501 -->
+                        <div class="tab-pane fade" id="pane-501" role="tabpanel" aria-labelledby="tab-501">
+                            <div class="card border-warning mb-4">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="card-title fw-bold mb-0">
+                                        <i class="bi bi-calculator me-2"></i>Pengeluaran Sisa 501
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6 position-relative">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-box me-1 text-primary"></i>Nama Barang
+                                            </label>
+                                            <input class="form-control border-0 shadow-sm" id="keluar501_product_name_embedded" placeholder="🔍 Ketik nama/kode..." autocomplete="off">
+                                            <datalist id="datalistProductsOutgoing">
+                                                <?php foreach ($products as $p): ?>
+                                                    <option value="<?= htmlspecialchars($p['product_name']) ?>" label="<?= htmlspecialchars($p['product_name']) ?> (<?= htmlspecialchars($p['sku']) ?>)" data-id="<?= $p['id'] ?>" data-sku="<?= htmlspecialchars($p['sku']) ?>" data-stdqty="<?= htmlspecialchars($p['standard_qty']) ?>">
+                                                <?php endforeach; ?>
+                                            </datalist>
+                                            <input type="hidden" id="keluar501_product_id_embedded">
+                                            <small id="keluar501_sku_display_embedded" class="text-muted d-block mt-1"></small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-tag me-1 text-primary"></i>Pilih Batch (Sisa 501)
+                                            </label>
+                                            <select class="form-select border-0 shadow-sm" id="keluar501_batch_select_embedded" disabled>
+                                                <option value="">-- Pilih produk terlebih dahulu --</option>
+                                            </select>
+                                            <small class="form-text text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>Hanya batch dengan sisa 501 > 0 yang akan ditampilkan
+                                            </small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-calculator me-1 text-success"></i>Sisa 501 Tersedia
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control bg-light border-0 shadow-sm fw-bold text-success" id="keluar501_sisa_display_embedded" readonly placeholder="0.00">
+                                                <span class="input-group-text bg-light border-0">Kg</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-box-arrow-up me-1 text-danger"></i>Jumlah 501 yang Dikeluarkan
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="number" step="any" class="form-control border-0 shadow-sm" id="keluar501_quantity_embedded" placeholder="0.00">
+                                                <span class="input-group-text bg-light border-0">Kg</span>
+                                            </div>
+                                            <small class="form-text text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>Masukkan jumlah 501 yang akan dikeluarkan
+                                            </small>
+                                        </div>
+                                        <div class="col-12 d-flex justify-content-end">
+                                            <button type="button" class="btn btn-warning fw-semibold" id="addItem501OutgoingBtn">
+                                                <i class="bi bi-plus-lg me-2"></i>Tambahkan 501
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="card-title fw-bold mb-0">
+                                        <i class="bi bi-list-ul me-2"></i>Daftar Pengeluaran 501
+                                    </h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:5%;" class="fw-bold">#</th>
+                                                    <th class="text-start fw-bold">Nama Barang</th>
+                                                    <th class="fw-bold">Batch</th>
+                                                    <th class="fw-bold">501 (Kg)</th>
+                                                    <th style="width:10%;" class="text-center fw-bold">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="outgoing_items_501_list">
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted p-4">
+                                                        <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
+                                                        <span>Belum ada item 501 yang ditambahkan</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
 
                 <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-secondary fw-semibold" data-bs-dismiss="modal">
@@ -596,136 +707,6 @@ foreach ($_GET as $key => $val) {
                     </button>
                     <button type="submit" class="btn btn-primary fw-semibold shadow-sm" id="saveTransactionBtn">
                         <i class="bi bi-save-fill me-1"></i>Simpan Transaksi
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Enhanced Modal for 501 -->
-<div class="modal fade" id="keluarkan501Modal" tabindex="-1" aria-labelledby="keluarkan501ModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <form action="index.php" method="POST" id="formKeluarkan501">
-<?php
-foreach ($_GET as $key => $val) {
-    if ($key !== 'status' && $key !== 'form_type') {
-        echo '<input type="hidden" name="' . htmlspecialchars($key) . '" value="' . htmlspecialchars($val) . '">';
-    }
-}
-?>
-                <input type="hidden" name="form_type" value="keluarkan_501">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(get_csrf_token()) ?>">
-
-                <div class="modal-header bg-gradient-warning text-dark border-0">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-circle bg-white bg-opacity-20 me-3">
-                            <i class="bi bi-box-arrow-up fs-4"></i>
-                        </div>
-                        <div>
-                            <h1 class="modal-title fs-5 fw-bold mb-0" id="keluarkan501ModalLabel">Pengeluaran Sisa 501</h1>
-                            <small class="opacity-75">Kelola sisa timbangan dari batch tertentu</small>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body">
-                    <div class="alert alert-info border-0 shadow-sm">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-info-circle fs-4 me-3"></i>
-                            <div>
-                                <strong>Informasi:</strong> Fitur ini digunakan untuk mengeluarkan sisa timbangan (501) dari batch tertentu tanpa mengurangi stok utama.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-calendar3 me-1 text-primary"></i>Tanggal Transaksi
-                            </label>
-                            <input type="date" class="form-control border-0 shadow-sm" id="keluar501_transaction_date" name="transaction_date" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-file-text me-1 text-primary"></i>No. Dokumen
-                            </label>
-                            <input type="text" class="form-control border-0 shadow-sm" id="keluar501_document_number" name="document_number" placeholder="Nomor dokumen" required>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-box me-1 text-primary"></i>1. Pilih Produk
-                            </label>
-                            <select class="form-select border-0 shadow-sm" id="product_id_501" name="product_id" required>
-                                <option value="">🔍 -- Pilih Produk --</option>
-                                <?php foreach ($products as $p): ?>
-                                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['product_name']) ?> (<?= htmlspecialchars($p['sku']) ?>)</option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-tag me-1 text-primary"></i>2. Pilih Batch dengan Sisa 501
-                            </label>
-                            <select class="form-select border-0 shadow-sm" id="batch_id_501" name="incoming_transaction_id" required disabled>
-                                <option value="">-- Pilih produk terlebih dahulu --</option>
-                            </select>
-                            <small class="form-text text-muted">
-                                <i class="bi bi-info-circle me-1"></i>Hanya batch dengan sisa 501 > 0 yang akan ditampilkan
-                            </small>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-calculator me-1 text-success"></i>Sisa 501 Tersedia
-                            </label>
-                            <div class="input-group">
-                                <input type="text" class="form-control bg-light border-0 shadow-sm fw-bold text-success" id="keluar501_sisa_display" readonly placeholder="0.00">
-                                <span class="input-group-text bg-light border-0">Kg</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-box-arrow-up me-1 text-danger"></i>3. Jumlah yang Dikeluarkan
-                            </label>
-                            <div class="input-group">
-                                <input type="number" step="any" class="form-control border-0 shadow-sm" id="quantity_501" name="quantity_501" placeholder="0.00" required>
-                                <span class="input-group-text bg-light border-0">Kg</span>
-                            </div>
-                            <small class="form-text text-muted">
-                                <i class="bi bi-info-circle me-1"></i>Masukkan jumlah 501 yang akan dikeluarkan
-                            </small>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-flag me-1 text-primary"></i>Status Transaksi
-                            </label>
-                            <select class="form-select border-0 shadow-sm" id="keluar501_status" name="status" required>
-                                <option value="Pending">🟡 Pending</option>
-                                <option value="Closed" selected>🟢 Closed</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-chat-text me-1 text-primary"></i>Keterangan
-                            </label>
-                            <textarea class="form-control border-0 shadow-sm" name="description" rows="2" placeholder="Pengeluaran Sisa 501">Pengeluaran Sisa 501</textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer bg-light border-0">
-                    <button type="button" class="btn btn-secondary fw-semibold" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>Batal
-                    </button>
-                    <button type="submit" class="btn btn-warning fw-semibold shadow-sm text-dark" id="keluar501SubmitButton">
-                        <i class="bi bi-save-fill me-1"></i>Keluarkan Sisa 501
                     </button>
                 </div>
             </form>

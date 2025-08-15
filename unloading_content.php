@@ -499,7 +499,7 @@ try {
     <code class="bg-light px-2 py-1 rounded"><?= htmlspecialchars($record['nomor_mobil']) ?></code>
 </td>
                                             <td class="text-center">
-                                                <span class="badge bg-secondary"><?= formatAngka($record['qty_sak']) ?></span>
+                                                <span class="badge bg-secondary"><?= formatAngkaUI($record['qty_sak']) ?></span>
                                             </td>
                                             <td class="text-center">
                                                  <input type="number" class="form-control form-control-sm text-center" 

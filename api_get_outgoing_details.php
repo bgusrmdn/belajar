@@ -16,7 +16,7 @@ if (!empty($id)) {
             SELECT 
                 t.id, t.transaction_date, t.description, t.status, t.document_number, t.created_at,
                 t.product_id, p.product_name, p.sku, t.incoming_transaction_id as incoming_id, 
-                i.batch_number, t.quantity_kg as qty_kg, t.quantity_sacks as qty_sak
+                i.batch_number, t.quantity_kg as qty_kg, t.quantity_sacks as qty_sak, t.lot_number as lot_number
             FROM outgoing_transactions t
             JOIN products p ON t.product_id = p.id
             LEFT JOIN incoming_transactions i ON t.incoming_transaction_id = i.id
@@ -84,7 +84,7 @@ if (!empty($id)) {
                 $baseSql = "
                     SELECT 
                         t.id, t.product_id, p.product_name, p.sku, t.incoming_transaction_id as incoming_id, 
-                        i.batch_number, t.quantity_kg as qty_kg, t.quantity_sacks as qty_sak
+                        i.batch_number, t.quantity_kg as qty_kg, t.quantity_sacks as qty_sak, t.lot_number as lot_number
                     FROM outgoing_transactions t
                     JOIN products p ON t.product_id = p.id
                     LEFT JOIN incoming_transactions i ON t.incoming_transaction_id = i.id
@@ -109,7 +109,7 @@ if (!empty($id)) {
                     $baseSqlFallback = "
                         SELECT 
                             t.id, t.product_id, p.product_name, p.sku, t.incoming_transaction_id as incoming_id, 
-                            i.batch_number, t.quantity_kg as qty_kg, t.quantity_sacks as qty_sak
+                            i.batch_number, t.quantity_kg as qty_kg, t.quantity_sacks as qty_sak, t.lot_number as lot_number
                         FROM outgoing_transactions t
                         JOIN products p ON t.product_id = p.id
                         LEFT JOIN incoming_transactions i ON t.incoming_transaction_id = i.id
@@ -128,7 +128,7 @@ if (!empty($id)) {
                         $baseSqlFallback2 = "
                             SELECT 
                                 t.id, t.product_id, p.product_name, p.sku, t.incoming_transaction_id as incoming_id, 
-                                i.batch_number, t.quantity_kg as qty_kg, t.quantity_sacks as qty_sak
+                                i.batch_number, t.quantity_kg as qty_kg, t.quantity_sacks as qty_sak, t.lot_number as lot_number
                             FROM outgoing_transactions t
                             JOIN products p ON t.product_id = p.id
                             LEFT JOIN incoming_transactions i ON t.incoming_transaction_id = i.id
