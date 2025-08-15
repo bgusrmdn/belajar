@@ -590,10 +590,9 @@ function calculateSacksForItem(counter) {
   const selectedProduct = productsData.find((p) => p.id === productId);
 
   if (selectedProduct && quantityInput.value) {
-    const kg = Number.parseFloat(quantityInput.value);
+    const kg = Number.parseFloat((quantityInput.value || '').toString().replace(',', '.'));
     const standardQty = selectedProduct.standard_qty;
-    const sacks = (kg / standardQty).toFixed(2);
-    sacksInput.value = sacks;
+    sacksInput.value = (kg && standardQty) ? String(kg / standardQty) : '';
   }
 }
 
