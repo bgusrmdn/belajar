@@ -690,14 +690,24 @@ function load501Batches() {
 function update501SisaDisplay() {
   const batchSelect = document.getElementById("keluar501_batch_select");
   const sisaDisplay = document.getElementById("keluar501_sisa_display");
+  const qtyInput = document.getElementById("keluar501_quantity");
 
   if (!batchSelect || !sisaDisplay) return;
 
   const selectedOption = batchSelect.options[batchSelect.selectedIndex];
-  if (selectedOption && selectedOption.dataset.sisa501) {
-    const sisa = Number.parseFloat(selectedOption.dataset.sisa501);
-    sisaDisplay.value =
-      sisa.toLocaleString("id-ID", { minimumFractionDigits: 2 }) + " Kg";
+  const raw = (selectedOption?.dataset?.sisa_raw ?? selectedOption?.dataset?.sisa501 ?? '').toString();
+  if (raw !== '') {
+    const available = Number.parseFloat(raw.replace(',', '.')) || 0;
+    const req = Number.parseFloat((qtyInput?.value || '0').toString().replace(',', '.')) || 0;
+    let remain = Math.max(0, available - req);
+    // round to max 3 decimals
+    remain = Math.round(remain * 1000) / 1000;
+    // display with comma, no grouping, trim trailing zeros
+    let disp = String(remain);
+    if (disp.indexOf('.') !== -1) {
+      disp = disp.replace(/\.0+$/,'').replace(/(\.\d{1,3})\d+$/, '$1');
+    }
+    sisaDisplay.value = (disp.replace('.', ',')) + " Kg";
   } else {
     sisaDisplay.value = "0 Kg";
   }
@@ -1828,6 +1838,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const max = Number.parseFloat(this.max) || 0;
         const val = Number.parseFloat((this.value || '0').toString().replace(',', '.')) || 0;
         if (max > 0 && val > max) this.value = String(max).replace('.', ',');
+        // update sisa realtime
+        const sel = batchSelect501?.options[batchSelect501.selectedIndex];
+        const raw = sel?.dataset?.sisa_raw ?? sel?.dataset?.sisa ?? '';
+        const available = Number.parseFloat((raw || '0').toString().replace(',', '.')) || 0;
+        let remain = Math.max(0, available - val);
+        remain = Math.round(remain * 1000) / 1000;
+        if (sisaDisplay501) sisaDisplay501.value = String(remain).replace('.', ',');
       });
     }
 
@@ -2095,9 +2112,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // Otomatis isi jumlah 501 dengan sisa maksimalnya saat batch dipilih
     batchSelect501.addEventListener("change", function () {
       const selectedOption = this.options[this.selectedIndex];
-      if (selectedOption && selectedOption.dataset.sisa) {
-        quantityInput501.value = selectedOption.dataset.sisa;
+      if (selectedOption && selectedOption.dataset.sisa_raw) {
+        quantityInput501.value = selectedOption.dataset.sisa_raw.replace('.', ',');
+      } else if (selectedOption && selectedOption.dataset.sisa) {
+        quantityInput501.value = String(selectedOption.dataset.sisa).replace('.', ',');
       }
+      // Also refresh sisa display realtime
+      update501SisaDisplay();
         });
    }
 });
