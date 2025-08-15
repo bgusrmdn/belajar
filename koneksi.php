@@ -36,6 +36,31 @@ try {
     throw new PDOException($e->getMessage(), (int)$e->getCode());
 }
 
+// Ensure numeric columns preserve up to 6 decimal places (no unintended rounding)
+try {
+    $columnsToEnsure = [
+        'incoming_transactions' => ['quantity_kg', 'quantity_sacks', 'lot_number', 'grossweight_kg'],
+        'outgoing_transactions' => ['quantity_kg', 'quantity_sacks', 'lot_number'],
+    ];
+
+    foreach ($columnsToEnsure as $table => $cols) {
+        foreach ($cols as $col) {
+            $stmt = $pdo->prepare("SELECT DATA_TYPE, NUMERIC_PRECISION, NUMERIC_SCALE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+            $stmt->execute([$table, $col]);
+            $info = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$info) { continue; }
+            $dataType = strtolower($info['DATA_TYPE'] ?? '');
+            $precision = (int)($info['NUMERIC_PRECISION'] ?? 0);
+            $scale = (int)($info['NUMERIC_SCALE'] ?? 0);
+            if ($dataType !== 'decimal' || $precision < 18 || $scale < 6) {
+                $pdo->exec("ALTER TABLE `$table` MODIFY `$col` DECIMAL(18,6) NOT NULL DEFAULT 0");
+            }
+        }
+    }
+} catch (Throwable $e) {
+    // Ignore migration failures to avoid blocking app usage; can be run manually via scripts/migrate_precision.php
+}
+
 /**
  * Format angka untuk tampilan
  * 
