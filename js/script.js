@@ -1513,10 +1513,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const kekurangan = qtyKgDiminta - sisaStok;
         Swal.fire({
           title: "Stok Tidak Cukup",
-          text: `Hanya ${formatAngkaJS(
-            sisaStok
-          )} Kg yang ditambahkan. Kekurangan ${formatAngkaJS(kekurangan)} Kg.`,
+          html: `<div class="text-start small">
+                   <div>Hanya <strong>${formatAngkaJS(sisaStok)} Kg</strong> yang ditambahkan.</div>
+                   <div class="mt-2">Kekurangan:</div>
+                   <div class="input-group input-group-sm mt-1">
+                     <input id="copyKekurangan" class="form-control" type="text" value="${formatAngkaJS(kekurangan)}" readonly>
+                     <button type="button" class="btn btn-outline-primary" id="btnCopyKekurangan"><i class="bi bi-clipboard me-1"></i>Copy</button>
+                   </div>
+                 </div>`,
           icon: "info",
+          showConfirmButton: true,
+          confirmButtonText: "OK",
+          didOpen: () => {
+            const btn = document.getElementById('btnCopyKekurangan');
+            const inp = document.getElementById('copyKekurangan');
+            if (btn && inp && navigator.clipboard) {
+              btn.addEventListener('click', () => {
+                navigator.clipboard.writeText(inp.value).then(() => {
+                  btn.innerHTML = '<i class="bi bi-clipboard-check me-1"></i>Tersalin';
+                  setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy'; }, 1500);
+                });
+              });
+            }
+          }
         });
       }
 
