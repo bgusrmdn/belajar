@@ -1940,13 +1940,18 @@ document.addEventListener("DOMContentLoaded", () => {
         embedded501Items.push(item);
         renderEmbedded501List();
 
-        // Realtime decrement sisa on selected option
-        const newSisa = Math.max(0, sisaBefore - qty501);
-        sel.dataset.sisa = String(newSisa);
+        // Decrement sisa on selected option after Add (not on typing)
+        const base = Number.parseFloat((sel.dataset.sisaBase || sel.dataset.sisa || '0').toString().replace(',', '.')) || 0;
+        let remain = Math.max(0, base - qty501);
+        remain = Math.round(remain * 1000) / 1000;
+        sel.dataset.sisaBase = String(remain);
+        sel.dataset.sisaBaseRaw = String(remain);
+        sel.dataset.sisa = String(remain);
+        sel.dataset.sisa_raw = String(remain);
         update501OptionLabel(sel);
-        if (sisaDisplay501) sisaDisplay501.value = newSisa.toFixed(2);
-        if (qty501Input) { qty501Input.value = ''; qty501Input.max = String(newSisa); }
-        if (newSisa <= 0) { sel.disabled = true; }
+        if (sisaDisplay501) sisaDisplay501.value = String(remain).replace('.', ',');
+        if (qty501Input) { qty501Input.value = ''; qty501Input.max = String(remain); }
+        if (remain <= 0) { sel.disabled = true; }
       });
 
       if (items501Tbody) {
@@ -1987,6 +1992,20 @@ document.addEventListener("DOMContentLoaded", () => {
           if (embedded501Items.length) {
             const merged = list.concat(embedded501Items);
             itemsJsonHidden.value = JSON.stringify(merged);
+            // After merging, decrement sisa of corresponding option(s)
+            embedded501Items.forEach((it) => {
+              const opt = Array.from(batchSelect501?.options || []).find(o => o && o.value === it.incoming_id);
+              if (!opt) return;
+              const base = Number.parseFloat((opt.dataset.sisaBase || opt.dataset.sisa || '0').toString().replace(',', '.')) || 0;
+              const dec = Number.parseFloat((it.lot_number || 0).toString().replace(',', '.')) || 0;
+              let remain = Math.max(0, base - dec);
+              remain = Math.round(remain * 1000) / 1000;
+              opt.dataset.sisaBase = String(remain);
+              opt.dataset.sisaBaseRaw = String(remain);
+              opt.dataset.sisa = String(remain);
+              opt.dataset.sisa_raw = String(remain);
+              update501OptionLabel(opt);
+            });
           }
         } catch (_) { /* ignore */ }
       });
