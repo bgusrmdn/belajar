@@ -690,24 +690,11 @@ function load501Batches() {
 function update501SisaDisplay() {
   const batchSelect = document.getElementById("keluar501_batch_select");
   const sisaDisplay = document.getElementById("keluar501_sisa_display");
-  const qtyInput = document.getElementById("keluar501_quantity");
-
   if (!batchSelect || !sisaDisplay) return;
-
   const selectedOption = batchSelect.options[batchSelect.selectedIndex];
   const raw = (selectedOption?.dataset?.sisa_raw ?? selectedOption?.dataset?.sisa501 ?? '').toString();
   if (raw !== '') {
-    const available = Number.parseFloat(raw.replace(',', '.')) || 0;
-    const req = Number.parseFloat((qtyInput?.value || '0').toString().replace(',', '.')) || 0;
-    let remain = Math.max(0, available - req);
-    // round to max 3 decimals
-    remain = Math.round(remain * 1000) / 1000;
-    // display with comma, no grouping, trim trailing zeros
-    let disp = String(remain);
-    if (disp.indexOf('.') !== -1) {
-      disp = disp.replace(/\.0+$/,'').replace(/(\.\d{1,3})\d+$/, '$1');
-    }
-    sisaDisplay.value = (disp.replace('.', ',')) + " Kg";
+    sisaDisplay.value = raw.replace('.', ',') + " Kg";
   } else {
     sisaDisplay.value = "0 Kg";
   }
@@ -1835,20 +1822,14 @@ document.addEventListener("DOMContentLoaded", () => {
         qty501Input.max = isFinite(sisa) ? String(sisa) : '';
       });
       qty501Input.addEventListener('input', function() {
+        // Hanya clamp nilai input agar tidak melebihi sisa, tapi jangan mengurangi sisa/label sampai klik Tambah
         const sel = batchSelect501?.options[batchSelect501.selectedIndex];
         if (!sel) return;
         const base = Number.parseFloat((sel.dataset.sisaBase || sel.dataset.sisa || '0').toString().replace(',', '.')) || 0;
         let val = Number.parseFloat((this.value || '0').toString().replace(',', '.')) || 0;
         if (base > 0 && val > base) {
-          val = base;
-          this.value = String(val).replace('.', ',');
+          this.value = String(base).replace('.', ',');
         }
-        let remain = Math.max(0, base - val);
-        remain = Math.round(remain * 1000) / 1000;
-        sel.dataset.sisa = String(remain);
-        sel.dataset.sisa_raw = String(remain);
-        update501OptionLabel(sel);
-        if (sisaDisplay501) sisaDisplay501.value = String(remain).replace('.', ',');
       });
     }
 
