@@ -1470,8 +1470,8 @@ document.addEventListener("DOMContentLoaded", () => {
       normalItems.forEach((item, index) => {
         const row = `<tr>
           <td>${index + 1}</td>
-          <td class="text-start">${item.product_name}<br><small class="text-muted">${item.sku || ""}</small></td>
-          <td>${item.batch_number}</td>
+          <td class="text-start">${item.product_name}<br><div class="d-flex align-items-center gap-1"><small class="text-muted">${item.sku || ""}</small><button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" data-copy="${item.sku || ""}" title="Copy Kode"><i class="bi bi-clipboard"></i></button></div></td>
+          <td><div class="d-flex align-items-center gap-1"><span>${item.batch_number}</span><button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" data-copy="${item.batch_number}" title="Copy Batch"><i class="bi bi-clipboard"></i></button></div></td>
           <td>
             <div class="d-flex align-items-center gap-1">
               <span>${formatAngkaJS(item.qty_kg)}</span>
