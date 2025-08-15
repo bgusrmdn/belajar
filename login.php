@@ -83,6 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .brand-subtitle {
             color: var(--muted);
         }
+        .form-label { color: var(--text); letter-spacing: .02em; }
+        .text-muted { color: var(--muted) !important; }
         .input-group-text {
             background: rgba(255,255,255,0.06);
             border: 1px solid var(--card-border);
@@ -124,21 +126,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <form action="login.php" method="POST" id="loginForm">
                 <div class="mb-3">
-                    <label for="nik" class="form-label small text-uppercase text-muted">NIK</label>
+                    <label for="nik" class="form-label small text-uppercase">NIK</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
                         <input type="text" class="form-control" id="nik" name="nik" placeholder="Masukkan NIK" required>
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label for="plant" class="form-label small text-uppercase text-muted">PLANT</label>
+                    <label for="plant" class="form-label small text-uppercase">PLANT</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-buildings"></i></span>
                         <input type="text" class="form-control" id="plant" name="plant" placeholder="Masukkan PLANT" required>
                     </div>
                 </div>
                 <div class="mb-4">
-                    <label for="password" class="form-label small text-uppercase text-muted">Password</label>
+                    <label for="password" class="form-label small text-uppercase">Password</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
                         <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan Password" required>
