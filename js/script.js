@@ -1414,7 +1414,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function autoCalculateOutgoing() {
-      const qtyKg = Number.parseFloat(itemQtyKg.value);
+      const qtyKg = Number.parseFloat((itemQtyKg.value || '').toString().replace(',', '.'));
       const qtySak = Number.parseFloat(itemQtySacks.value);
 
       if (
@@ -1498,7 +1498,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       const batchOption =
         itemIncomingSelect.options[itemIncomingSelect.selectedIndex];
-      const qtyKgDiminta = Number.parseFloat(itemQtyKg.value);
+      const qtyKgDiminta = Number.parseFloat((itemQtyKg.value || '').toString().replace(',', '.'));
 
       if (
         !productOption ||

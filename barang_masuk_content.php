@@ -704,8 +704,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const productName = document.getElementById('item_product_name_incoming').value;
             const productId = document.getElementById('item_product_id_hidden').value;
             const batchNumber = document.getElementById('item_batch_number').value;
-            const quantityKg = parseFloat(document.getElementById('item_quantity_kg').value) || 0;
-            const quantitySacks = parseFloat(document.getElementById('item_quantity_sacks').value) || 0;
+            const quantityKg = Number.parseFloat((document.getElementById('item_quantity_kg').value || '').toString().replace(',', '.')) || 0;
+            const quantitySacks = Number.parseFloat((document.getElementById('item_quantity_sacks').value || '').toString().replace(',', '.')) || 0;
 
             if (!productName || !productId) {
                 alert('Pilih nama barang terlebih dahulu!');
@@ -1164,7 +1164,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (selectedOption && selectedOption.dataset.stdqty) {
                     const standardQty = parseFloat(selectedOption.dataset.stdqty);
                     if (standardQty > 0) {
-                        itemQuantitySacks.value = (parseFloat(this.value) / standardQty).toFixed(2);
+                        itemQuantitySacks.value = (Number.parseFloat((this.value || '').toString().replace(',', '.')) / standardQty).toString();
                     }
                 }
             }
@@ -1178,7 +1178,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (selectedOption && selectedOption.dataset.stdqty) {
                     const standardQty = parseFloat(selectedOption.dataset.stdqty);
                     if (standardQty > 0) {
-                        itemQuantityKg.value = (parseFloat(this.value) * standardQty).toFixed(2);
+                        itemQuantityKg.value = (Number.parseFloat((this.value || '').toString().replace(',', '.')) * standardQty).toString();
                     }
                 }
             }
