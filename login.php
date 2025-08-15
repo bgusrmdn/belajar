@@ -49,18 +49,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        :root {
+            --bg-start: #0f172a; /* slate-900 */
+            --bg-end: #1f2937;   /* gray-800 */
+            --card-bg: #111827;  /* gray-900 */
+            --card-border: rgba(255,255,255,0.06);
+            --text: #e5e7eb;     /* gray-200 */
+            --muted: #9ca3af;    /* gray-400 */
+            --accent: #6366f1;   /* indigo-500 */
+            --accent-2: #22c55e; /* green-500 */
+        }
         body {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-color: #f0f2f5;
+            background: radial-gradient(1200px 600px at 10% 10%, rgba(99,102,241,0.08), transparent 50%),
+                        radial-gradient(1000px 500px at 90% 90%, rgba(34,197,94,0.07), transparent 50%),
+                        linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            color: var(--text);
         }
-
         .login-card {
-            max-width: 400px;
+            max-width: 420px;
             width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            overflow: hidden;
         }
+        .brand-title {
+            color: var(--text);
+        }
+        .brand-subtitle {
+            color: var(--muted);
+        }
+        .input-group-text {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--card-border);
+            color: var(--muted);
+        }
+        .form-control {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--card-border);
+            color: var(--text);
+        }
+        .form-control::placeholder { color: #9ca3af; }
+        .form-control:focus {
+            border-color: rgba(99,102,241,0.5);
+            box-shadow: 0 0 0 .25rem rgba(99,102,241,0.15);
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border: 0;
+        }
+        .btn-primary:hover {
+            filter: brightness(1.06);
+        }
+        .logo-wrap img { filter: drop-shadow(0 6px 24px rgba(99,102,241,0.35)); border-radius: 10px; }
     </style>
 </head>
 
@@ -68,23 +115,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="card login-card shadow-lg border-0">
         <div class="card-body p-4 p-md-5">
             <div class="text-center mb-4">
-                <img src="images/mayora.jpg" alt="Logo Perusahaan" style="width: 135px; height: auto;">
-                <h3 class="fw-bold mt-2">Mayora Portal</h3>
-                <p class="text-muted">Silakan login untuk melanjutkan</p>
+                <div class="logo-wrap mb-2">
+                    <img src="images/mayora.jpg" alt="Logo Perusahaan" style="width: 110px; height: auto;">
+                </div>
+                <h3 class="fw-bold mt-1 brand-title">Mayora Portal</h3>
+                <p class="brand-subtitle">Silakan login untuk melanjutkan</p>
             </div>
 
             <form action="login.php" method="POST" id="loginForm">
-                <div class="form-floating mb-3">
-                    <input type="text" class="form-control" id="nik" name="nik" placeholder="NIK" required>
-                    <label for="nik"><i class="bi bi-person-badge me-2"></i>NIK</label>
+                <div class="mb-3">
+                    <label for="nik" class="form-label small text-uppercase text-muted">NIK</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                        <input type="text" class="form-control" id="nik" name="nik" placeholder="Masukkan NIK" required>
+                    </div>
                 </div>
-                <div class="form-floating mb-3">
-                    <input type="text" class="form-control" id="plant" name="plant" placeholder="PLANT" required>
-                    <label for="plant"><i class="bi bi-buildings me-2"></i>PLANT</label>
+                <div class="mb-3">
+                    <label for="plant" class="form-label small text-uppercase text-muted">PLANT</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-buildings"></i></span>
+                        <input type="text" class="form-control" id="plant" name="plant" placeholder="Masukkan PLANT" required>
+                    </div>
                 </div>
-                <div class="form-floating mb-3">
-                    <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
-                    <label for="password"><i class="bi bi-shield-lock me-2"></i>Password</label>
+                <div class="mb-4">
+                    <label for="password" class="form-label small text-uppercase text-muted">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan Password" required>
+                    </div>
                 </div>
                 <div class="d-grid">
                     <button class="btn btn-primary btn-lg" type="submit">Login</button>
