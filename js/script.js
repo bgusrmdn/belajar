@@ -1835,15 +1835,19 @@ document.addEventListener("DOMContentLoaded", () => {
         qty501Input.max = isFinite(sisa) ? String(sisa) : '';
       });
       qty501Input.addEventListener('input', function() {
-        const max = Number.parseFloat(this.max) || 0;
-        const val = Number.parseFloat((this.value || '0').toString().replace(',', '.')) || 0;
-        if (max > 0 && val > max) this.value = String(max).replace('.', ',');
-        // update sisa realtime
         const sel = batchSelect501?.options[batchSelect501.selectedIndex];
-        const raw = sel?.dataset?.sisa_raw ?? sel?.dataset?.sisa ?? '';
-        const available = Number.parseFloat((raw || '0').toString().replace(',', '.')) || 0;
-        let remain = Math.max(0, available - val);
+        if (!sel) return;
+        const base = Number.parseFloat((sel.dataset.sisaBase || sel.dataset.sisa || '0').toString().replace(',', '.')) || 0;
+        let val = Number.parseFloat((this.value || '0').toString().replace(',', '.')) || 0;
+        if (base > 0 && val > base) {
+          val = base;
+          this.value = String(val).replace('.', ',');
+        }
+        let remain = Math.max(0, base - val);
         remain = Math.round(remain * 1000) / 1000;
+        sel.dataset.sisa = String(remain);
+        sel.dataset.sisa_raw = String(remain);
+        update501OptionLabel(sel);
         if (sisaDisplay501) sisaDisplay501.value = String(remain).replace('.', ',');
       });
     }
@@ -2096,10 +2100,10 @@ document.addEventListener("DOMContentLoaded", () => {
           if (data && data.length > 0) {
             data.forEach((batch) => {
               const raw = (batch.sisa_lot_number ?? '').toString();
-              const optionText = `Tgl: ${batch.transaction_date} - Batch: ${
-                batch.batch_number || "N/A"
-              } (Sisa 501: ${raw.replace('.', ',')} Kg)`;
-              batchSelect501.innerHTML += `<option value="${batch.id}" data-sisa="${Number.parseFloat(raw.replace(',', '.'))}" data-sisa-raw="${raw}">${optionText}</option>`;
+              const date = batch.transaction_date || '';
+              const bnum = batch.batch_number || 'N/A';
+              const optionText = `Tgl: ${date} - Batch: ${bnum} (Sisa 501: ${raw.replace('.', ',')} Kg)`;
+              batchSelect501.innerHTML += `<option value="${batch.id}" data-date="${date}" data-batch_number="${bnum}" data-sisa="${Number.parseFloat(raw.replace(',', '.'))}" data-sisa-raw="${raw}" data-sisa-base="${Number.parseFloat(raw.replace(',', '.'))}" data-sisa-base-raw="${raw}">${optionText}</option>`;
             });
           } else {
             batchSelect501.innerHTML =
@@ -2112,14 +2116,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // Otomatis isi jumlah 501 dengan sisa maksimalnya saat batch dipilih
     batchSelect501.addEventListener("change", function () {
       const selectedOption = this.options[this.selectedIndex];
-      if (selectedOption && selectedOption.dataset.sisa_raw) {
-        quantityInput501.value = selectedOption.dataset.sisa_raw.replace('.', ',');
-      } else if (selectedOption && selectedOption.dataset.sisa) {
-        quantityInput501.value = String(selectedOption.dataset.sisa).replace('.', ',');
+      if (selectedOption) {
+        // Reset current sisa to base when switching batch
+        selectedOption.dataset.sisa = selectedOption.dataset.sisaBase || selectedOption.dataset.sisa;
+        selectedOption.dataset.sisa_raw = selectedOption.dataset.sisaBaseRaw || selectedOption.dataset.sisa_raw;
+        if (selectedOption.dataset.sisa_raw) {
+          quantityInput501.value = selectedOption.dataset.sisa_raw.replace('.', ',');
+        } else if (selectedOption.dataset.sisa) {
+          quantityInput501.value = String(selectedOption.dataset.sisa).replace('.', ',');
+        }
       }
-      // Also refresh sisa display realtime
       update501SisaDisplay();
-        });
+    });
    }
 });
  
