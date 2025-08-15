@@ -314,8 +314,7 @@ function calculateKgFromSacks() {
   if (selectedProduct && sacksInput.value) {
     const sacks = Number.parseFloat(sacksInput.value);
     const standardQty = selectedProduct.standard_qty;
-    const kg = (sacks * standardQty).toFixed(2);
-    kgInput.value = kg;
+    kgInput.value = (sacks && standardQty) ? String(sacks * standardQty) : "";
   }
 }
 
@@ -1422,13 +1421,13 @@ document.addEventListener("DOMContentLoaded", () => {
         outgoingCurrentStdQty > 0 &&
         !isNaN(qtyKg)
       ) {
-        itemQtySacks.value = (qtyKg / outgoingCurrentStdQty).toFixed(2);
+        itemQtySacks.value = String(qtyKg / outgoingCurrentStdQty);
       } else if (
         outgoingCalcKgCheck.checked &&
         outgoingCurrentStdQty > 0 &&
         !isNaN(qtySak)
       ) {
-        itemQtyKg.value = (qtySak * outgoingCurrentStdQty).toFixed(2);
+        itemQtyKg.value = String(qtySak * outgoingCurrentStdQty);
       }
     }
 
