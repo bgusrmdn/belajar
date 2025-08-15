@@ -1289,12 +1289,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if (currentSisa > 0) {
             const sisa_kg_formatted = formatAngkaJS(currentSisa);
+            const sisa_sak = outgoingCurrentStdQty > 0 ? currentSisa / outgoingCurrentStdQty : 0;
+            const sisa_sak_formatted = formatAngkaJS(sisa_sak);
             const optionText = `Tgl: ${batch.transaction_date} - Batch: ${
               batch.batch_number || "N/A"
-            } (Sisa: ${sisa_kg_formatted} Kg)`;
+            } (Sisa: ${sisa_kg_formatted} Kg / ${sisa_sak_formatted} Sak)`;
             itemIncomingSelect.innerHTML += `<option value="${
               batch.id
-            }" data-sisa_kg="${currentSisa}" data-batch_number="${
+            }" data-sisa_kg="${currentSisa}" data-sisa_sak="${sisa_sak}" data-batch_number="${
               batch.batch_number || ""
             }">${optionText}</option>`;
             availableBatches++;
