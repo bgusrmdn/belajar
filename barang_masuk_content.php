@@ -730,7 +730,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 sku: sku,
                 batch_number: batchNumber,
                 quantity_kg: quantityKg,
+                quantity_kg_display: (document.getElementById('item_quantity_kg').value || '').toString(),
                 quantity_sacks: quantitySacks,
+                quantity_sacks_display: (document.getElementById('item_quantity_sacks').value || '').toString(),
                 grossweight_kg: 0,
                 lot_number: 0
             };
@@ -768,8 +770,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td class="text-center">${idx + 1}</td>
                         <td>${item.product_name}</td>
                         <td>${item.batch_number}</td>
-                        <td>${item.quantity_kg ? Number(item.quantity_kg).toLocaleString('id-ID') + ' kg' : ''}</td>
-                        <td>${item.quantity_sacks ? Number(item.quantity_sacks).toLocaleString('id-ID') + ' sak' : ''}</td>
+                        <td>${item.quantity_kg_display ? item.quantity_kg_display + 'kg' : (item.quantity_kg ? String(item.quantity_kg).replace('.', ',') + 'kg' : '')}</td>
+                        <td>${item.quantity_sacks_display ? item.quantity_sacks_display + 'sak' : (item.quantity_sacks ? String(item.quantity_sacks).replace('.', ',') + 'sak' : '')}</td>
                         <td class="fw-bold text-success">${item.lot_number ? Number(item.lot_number).toLocaleString('id-ID') + ' kg' : '0 kg'}</td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${idx})">

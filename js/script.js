@@ -936,15 +936,15 @@ function renderOutgoingItemsList() {
     const tdKg = document.createElement('td');
     const kgSpan = document.createElement('span');
     kgSpan.className = 'badge bg-primary';
-    const kg = parseFloat(item.qty_kg ?? item.quantity_kg);
-    kgSpan.textContent = isFinite(kg) ? formatNumberDisplay(kg) : '';
+      const kgRaw = (item.quantity_kg_display ?? item.qty_kg ?? item.quantity_kg);
+  kgSpan.textContent = (kgRaw !== undefined && kgRaw !== null && String(kgRaw) !== '') ? String(kgRaw).replace('.', ',') : '';
     tdKg.appendChild(kgSpan);
 
     const tdSak = document.createElement('td');
     const sakSpan = document.createElement('span');
     sakSpan.className = 'badge bg-secondary';
-    const sak = parseFloat(item.qty_sak ?? item.quantity_sacks);
-    sakSpan.textContent = isFinite(sak) ? formatNumberDisplay(sak) : '';
+      const sakRaw = (item.quantity_sacks_display ?? item.qty_sak ?? item.quantity_sacks);
+  sakSpan.textContent = (sakRaw !== undefined && sakRaw !== null && String(sakRaw) !== '') ? String(sakRaw).replace('.', ',') : '';
     tdSak.appendChild(sakSpan);
 
     const tdAct = document.createElement('td');
