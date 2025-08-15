@@ -287,27 +287,27 @@ $query_params = $_GET;
                                         <code class="sku-code"><?= htmlspecialchars($row['sku']) ?></code>
                                     </td>
                                     <td>
-                                        <span class="data-value"><?= formatAngka($row['standard_qty']) ?></span>
+                                        <span class="data-value"><?= formatAngkaUI($row['standard_qty']) ?></span>
                                     </td>
                                     <td>
-                                        <span class="data-value"><?= formatAngka($rata_rata_qty) ?></span>
+                                        <span class="data-value"><?= formatAngkaUI($rata_rata_qty) ?></span>
                                     </td>
                                     <td>
                                         <div class="metric-value metric-success">
                                             <i class="bi bi-arrow-up-circle me-1"></i>
-                                            <span><?= formatAngka($row['total_501_masuk']) ?></span>
+                                            <span><?= formatAngkaUI($row['total_501_masuk']) ?></span>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="metric-value metric-warning">
                                             <i class="bi bi-arrow-down-circle me-1"></i>
-                                            <span><?= formatAngka($row['total_501_keluar']) ?></span>
+                                            <span><?= formatAngkaUI($row['total_501_keluar']) ?></span>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="metric-value metric-info">
                                             <i class="bi bi-graph-up me-1"></i>
-                                            <span class="fw-bold"><?= formatAngka($selisih_501) ?></span>
+                                            <span class="fw-bold"><?= formatAngkaUI($selisih_501) ?></span>
                                         </div>
                                     </td>
                                     <td class="text-center">

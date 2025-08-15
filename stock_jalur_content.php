@@ -301,14 +301,14 @@ if ($selected_incoming_id) {
                                                 <span class="fw-semibold" style="color: rgba(255,255,255,0.8);">Jumlah Datang (Kg):</span>
                                             </div>
                                             <div class="col-7 col-sm-8">
-                                                <strong style="color: #4ecdc4;"><?= formatAngka($incoming['quantity_kg']) ?></strong>
+                                                <strong style="color: #4ecdc4;"><?= formatAngkaUI($incoming['quantity_kg']) ?></strong>
                                             </div>
 
                                             <div class="col-5 col-sm-4">
                                                 <span class="fw-semibold" style="color: rgba(255,255,255,0.8);">Jumlah Datang (Sak):</span>
                                             </div>
                                             <div class="col-7 col-sm-8">
-                                                <strong style="color: #4ecdc4;"><?= formatAngka($incoming['quantity_sacks']) ?></strong>
+                                                <strong style="color: #4ecdc4;"><?= formatAngkaUI($incoming['quantity_sacks']) ?></strong>
                                             </div>
                                         </div>
                                     </div>
@@ -346,8 +346,8 @@ if ($selected_incoming_id) {
                                                         <tr>
                                                             <td class="text-center fw-bold"><?= $out_index + 1 ?></td>
                                                             <td class="text-center"><?= date('Y-m-d', strtotime($tx['transaction_date'])) ?></td>
-                                                            <td class="text-center fw-bold" style="color: #ff6b6b;"><?= formatAngka($tx['quantity_sacks']) ?></td>
-                                                            <td class="text-center fw-bold" style="color: #4ecdc4;"><?= formatAngka($sisa_stok_sak) ?></td>
+                                                            <td class="text-center fw-bold" style="color: #ff6b6b;"><?= formatAngkaUI($tx['quantity_sacks']) ?></td>
+                                                            <td class="text-center fw-bold" style="color: #4ecdc4;"><?= formatAngkaUI($sisa_stok_sak) ?></td>
                                                         </tr>
                                                 <?php endforeach;
                                                 endif; ?>
