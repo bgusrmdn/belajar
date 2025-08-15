@@ -1889,6 +1889,13 @@ document.addEventListener("DOMContentLoaded", () => {
           <td class=\"text-start\">${it.product_name}<br><small class=\"text-muted\">${it.sku || ''}</small></td>
           <td><span class=\"badge bg-info text-white\">${it.batch_number}</span></td>
           <td class=\"fw-bold text-success\">${formatAngkaJS(it.lot_number)} Kg</td>
+          <td class=\"text-center\">
+            <div class=\"btn-group btn-group-sm\" role=\"group\">
+              <button type=\"button\" class=\"btn btn-outline-secondary\" data-copy=\"sku\" data-value=\"${it.sku || ''}\" title=\"Salin Kode Barang\"><i class=\"bi bi-clipboard\"></i> Kode</button>
+              <button type=\"button\" class=\"btn btn-outline-secondary\" data-copy=\"batch\" data-value=\"${it.batch_number}\" title=\"Salin Batch\"><i class=\"bi bi-clipboard\"></i> Batch</button>
+              <button type=\"button\" class=\"btn btn-outline-secondary\" data-copy=\"qty\" data-value=\"${formatAngkaJS(it.lot_number)}\" title=\"Salin Qty Kg\"><i class=\"bi bi-clipboard\"></i> Kg</button>
+            </div>
+          </td>
           <td class=\"text-center\">\n            <button type=\"button\" class=\"btn btn-outline-danger btn-sm\" data-index=\"${idx}\"><i class=\"bi bi-trash3\"></i></button>\n          </td>
         `;
         items501Tbody.appendChild(tr);
@@ -1937,6 +1944,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (items501Tbody) {
         items501Tbody.addEventListener('click', (e) => {
+          const copyBtn = e.target.closest('button[data-copy]');
+          if (copyBtn) {
+            const text = copyBtn.dataset.value || '';
+            if (text) navigator.clipboard?.writeText(text);
+            return;
+          }
           const btn = e.target.closest('button[data-index]');
           if (!btn) return;
           const idx = Number.parseInt(btn.dataset.index, 10);

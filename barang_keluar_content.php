@@ -681,6 +681,7 @@ foreach ($_GET as $key => $val) {
                                                     <th class="text-start fw-bold">Nama Barang</th>
                                                     <th class="fw-bold">Batch</th>
                                                     <th class="fw-bold">501 (Kg)</th>
+                                                    <th class="text-center fw-bold" style="width: 18%;">Salin</th>
                                                     <th style="width:10%;" class="text-center fw-bold">Aksi</th>
                                                 </tr>
                                             </thead>
