@@ -1137,13 +1137,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function autoCalculate() {
-      const qtyKg = Number.parseFloat(qtyKgInput.value);
-      const qtySak = Number.parseFloat(qtySakInput.value);
+      const qtyKg = Number.parseFloat((qtyKgInput.value || '').toString().replace(',', '.'));
+      const qtySak = Number.parseFloat((qtySakInput.value || '').toString().replace(',', '.'));
 
       if (calcSakCheck.checked && currentStdQty > 0 && !isNaN(qtyKg)) {
-        qtySakInput.value = (qtyKg / currentStdQty).toFixed(2);
+        qtySakInput.value = String(qtyKg / currentStdQty);
       } else if (calcKgCheck.checked && currentStdQty > 0 && !isNaN(qtySak)) {
-        qtyKgInput.value = (qtySak * currentStdQty).toFixed(2);
+        qtyKgInput.value = String(qtySak * currentStdQty);
       }
     }
 
@@ -1151,7 +1151,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const gross = Number.parseFloat(grossWeightInput.value);
       const net = Number.parseFloat(qtyKgInput.value);
       if (!isNaN(gross) && !isNaN(net)) {
-        lotNumberDisplay.value = (gross - net).toFixed(2);
+        lotNumberDisplay.value = String(gross - net);
       } else {
         lotNumberDisplay.value = "";
       }
