@@ -269,7 +269,7 @@ $query_params = $_GET;
                                     <span class="badge bg-secondary fs-6"><?= formatAngkaUI($tx['quantity_sacks']) ?> sak</span>
                                 </td>
                                 <td class="text-nowrap">
-                                    <span class="badge bg-warning text-dark fs-6"><?= formatAngka($tx['lot_number']) ?></span>
+                                    <span class="badge bg-warning text-dark fs-6"><?= formatAngkaUI($tx['lot_number']) ?></span>
                                 </td>
                                 <td class="text-truncate" style="max-width: 100px;">
                                     <span class="text-primary fw-semibold" title="<?= htmlspecialchars($tx['document_number']) ?>">

@@ -283,7 +283,7 @@ $query_params = $_GET;
                                         <span class="text-muted"><?= htmlspecialchars($tx['description'] ?? '') ?></span>
                                     </td>
                                     <td class="text-nowrap">
-                                        <span class="badge bg-warning text-dark fs-6"><?= formatAngka($tx['lot_number']) ?></span>
+                                        <span class="badge bg-warning text-dark fs-6"><?= formatAngkaUI($tx['lot_number']) ?></span>
                                     </td>
                                     <td class="text-truncate" style="max-width: 100px;">
                                         <span class="badge bg-info text-white" title="<?= htmlspecialchars($tx['batch_number']) ?>">
