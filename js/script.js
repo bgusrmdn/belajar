@@ -690,14 +690,11 @@ function load501Batches() {
 function update501SisaDisplay() {
   const batchSelect = document.getElementById("keluar501_batch_select");
   const sisaDisplay = document.getElementById("keluar501_sisa_display");
-
   if (!batchSelect || !sisaDisplay) return;
-
   const selectedOption = batchSelect.options[batchSelect.selectedIndex];
-  if (selectedOption && selectedOption.dataset.sisa501) {
-    const sisa = Number.parseFloat(selectedOption.dataset.sisa501);
-    sisaDisplay.value =
-      sisa.toLocaleString("id-ID", { minimumFractionDigits: 2 }) + " Kg";
+  const raw = (selectedOption?.dataset?.sisa_raw ?? selectedOption?.dataset?.sisa501 ?? '').toString();
+  if (raw !== '') {
+    sisaDisplay.value = raw.replace('.', ',') + " Kg";
   } else {
     sisaDisplay.value = "0 Kg";
   }
@@ -1744,8 +1741,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!opt) return;
       const date = opt.dataset.date || '';
       const batchNum = opt.dataset.batch_number || '';
-      const sisa = Number.parseFloat(opt.dataset.sisa || '0');
-      opt.textContent = `Tgl: ${date} - Batch: ${batchNum || 'N/A'} (Sisa 501: ${isFinite(sisa) ? sisa.toFixed(2) : '0.00'} Kg)`;
+      const raw = (opt.dataset.sisa_raw ?? opt.dataset.sisa ?? '').toString();
+      // Display exactly as entered/original (preserve commas/points and scale)
+      const display = raw !== '' ? raw.replace('.', ',') : '0';
+      opt.textContent = `Tgl: ${date} - Batch: ${batchNum || 'N/A'} (Sisa 501: ${display} Kg)`;
     }
 
     function populate501OptionsEmbedded(productId, data) {
@@ -1753,13 +1752,15 @@ document.addEventListener("DOMContentLoaded", () => {
       batchSelect501.innerHTML = '<option value="" selected disabled>-- Pilih Batch --</option>';
       if (data && data.length > 0) {
         data.forEach((batch) => {
-          const sisa = Number.parseFloat(batch.sisa_lot_number ?? batch.remaining_501 ?? 0);
+          const raw = (batch.sisa_lot_number ?? batch.remaining_501 ?? '0').toString();
+          const sisa = Number.parseFloat(raw.replace(',', '.'));
           if (sisa > 0) {
             const option = document.createElement('option');
             option.value = batch.id;
             option.dataset.date = batch.transaction_date || '';
             option.dataset.batch_number = batch.batch_number || '';
             option.dataset.sisa = String(sisa);
+            option.dataset.sisa_raw = raw; // keep original formatting
             update501OptionLabel(option);
             batchSelect501.appendChild(option);
           }
@@ -1813,15 +1814,22 @@ document.addEventListener("DOMContentLoaded", () => {
     if (batchSelect501 && sisaDisplay501 && qty501Input) {
       batchSelect501.addEventListener('change', function() {
         const sel = this.options[this.selectedIndex];
-        const sisa = Number.parseFloat(sel?.dataset?.sisa || '0');
-        sisaDisplay501.value = isFinite(sisa) ? sisa.toFixed(2) : '0.00';
+        const raw = sel?.dataset?.sisa_raw ?? sel?.dataset?.sisa ?? '';
+        const sisa = Number.parseFloat((raw || '0').toString().replace(',', '.'));
+        // Display exactly as original (use comma in UI)
+        sisaDisplay501.value = raw ? raw.replace('.', ',') : '0';
         qty501Input.value = '';
         qty501Input.max = isFinite(sisa) ? String(sisa) : '';
       });
       qty501Input.addEventListener('input', function() {
-        const max = Number.parseFloat(this.max) || 0;
-        const val = Number.parseFloat(this.value) || 0;
-        if (max > 0 && val > max) this.value = String(max);
+        // Hanya clamp nilai input agar tidak melebihi sisa, tapi jangan mengurangi sisa/label sampai klik Tambah
+        const sel = batchSelect501?.options[batchSelect501.selectedIndex];
+        if (!sel) return;
+        const base = Number.parseFloat((sel.dataset.sisaBase || sel.dataset.sisa || '0').toString().replace(',', '.')) || 0;
+        let val = Number.parseFloat((this.value || '0').toString().replace(',', '.')) || 0;
+        if (base > 0 && val > base) {
+          this.value = String(base).replace('.', ',');
+        }
       });
     }
 
@@ -1881,6 +1889,13 @@ document.addEventListener("DOMContentLoaded", () => {
           <td class=\"text-start\">${it.product_name}<br><small class=\"text-muted\">${it.sku || ''}</small></td>
           <td><span class=\"badge bg-info text-white\">${it.batch_number}</span></td>
           <td class=\"fw-bold text-success\">${formatAngkaJS(it.lot_number)} Kg</td>
+          <td class=\"text-center\">
+            <div class=\"btn-group btn-group-sm\" role=\"group\">
+              <button type=\"button\" class=\"btn btn-outline-secondary\" data-copy=\"sku\" data-value=\"${it.sku || ''}\" title=\"Salin Kode Barang\"><i class=\"bi bi-clipboard\"></i> Kode</button>
+              <button type=\"button\" class=\"btn btn-outline-secondary\" data-copy=\"batch\" data-value=\"${it.batch_number}\" title=\"Salin Batch\"><i class=\"bi bi-clipboard\"></i> Batch</button>
+              <button type=\"button\" class=\"btn btn-outline-secondary\" data-copy=\"qty\" data-value=\"${formatAngkaJS(it.lot_number)}\" title=\"Salin Qty Kg\"><i class=\"bi bi-clipboard\"></i> Kg</button>
+            </div>
+          </td>
           <td class=\"text-center\">\n            <button type=\"button\" class=\"btn btn-outline-danger btn-sm\" data-index=\"${idx}\"><i class=\"bi bi-trash3\"></i></button>\n          </td>
         `;
         items501Tbody.appendChild(tr);
@@ -1913,17 +1928,28 @@ document.addEventListener("DOMContentLoaded", () => {
         embedded501Items.push(item);
         renderEmbedded501List();
 
-        // Realtime decrement sisa on selected option
-        const newSisa = Math.max(0, sisaBefore - qty501);
-        sel.dataset.sisa = String(newSisa);
+        // Decrement sisa on selected option after Add (not on typing)
+        const base = Number.parseFloat((sel.dataset.sisaBase || sel.dataset.sisa || '0').toString().replace(',', '.')) || 0;
+        let remain = Math.max(0, base - qty501);
+        remain = Math.round(remain * 1000) / 1000;
+        sel.dataset.sisaBase = String(remain);
+        sel.dataset.sisaBaseRaw = String(remain);
+        sel.dataset.sisa = String(remain);
+        sel.dataset.sisa_raw = String(remain);
         update501OptionLabel(sel);
-        if (sisaDisplay501) sisaDisplay501.value = newSisa.toFixed(2);
-        if (qty501Input) { qty501Input.value = ''; qty501Input.max = String(newSisa); }
-        if (newSisa <= 0) { sel.disabled = true; }
+        if (sisaDisplay501) sisaDisplay501.value = String(remain).replace('.', ',');
+        if (qty501Input) { qty501Input.value = ''; qty501Input.max = String(remain); }
+        if (remain <= 0) { sel.disabled = true; }
       });
 
       if (items501Tbody) {
         items501Tbody.addEventListener('click', (e) => {
+          const copyBtn = e.target.closest('button[data-copy]');
+          if (copyBtn) {
+            const text = copyBtn.dataset.value || '';
+            if (text) navigator.clipboard?.writeText(text);
+            return;
+          }
           const btn = e.target.closest('button[data-index]');
           if (!btn) return;
           const idx = Number.parseInt(btn.dataset.index, 10);
@@ -1933,13 +1959,17 @@ document.addEventListener("DOMContentLoaded", () => {
             // Restore sisa back to option if still present in list
             const opt = Array.from(batchSelect501?.options || []).find(o => o.value === removed.incoming_id);
             if (opt) {
-              const restored = (Number.parseFloat(opt.dataset.sisa || '0') || 0) + (Number.parseFloat(removed.lot_number || '0') || 0);
+              const baseRaw = (opt.dataset.sisa_raw ?? opt.dataset.sisa ?? '0').toString();
+              const base = Number.parseFloat(baseRaw.replace(',', '.')) || 0;
+              const add = Number.parseFloat((removed.lot_number || '0').toString().replace(',', '.')) || 0;
+              const restored = base + add;
               opt.dataset.sisa = String(restored);
+              opt.dataset.sisa_raw = (baseRaw && baseRaw.includes(',')) ? String(restored).replace('.', ',') : String(restored);
               opt.disabled = false;
               update501OptionLabel(opt);
               // If this option is currently selected, update display
               if (batchSelect501 && batchSelect501.value === opt.value) {
-                if (sisaDisplay501) sisaDisplay501.value = restored.toFixed(2);
+                if (sisaDisplay501) sisaDisplay501.value = (opt.dataset.sisa_raw || String(restored)).replace('.', ',');
                 if (qty501Input) qty501Input.max = String(restored);
               }
             }
@@ -1956,6 +1986,20 @@ document.addEventListener("DOMContentLoaded", () => {
           if (embedded501Items.length) {
             const merged = list.concat(embedded501Items);
             itemsJsonHidden.value = JSON.stringify(merged);
+            // After merging, decrement sisa of corresponding option(s)
+            embedded501Items.forEach((it) => {
+              const opt = Array.from(batchSelect501?.options || []).find(o => o && o.value === it.incoming_id);
+              if (!opt) return;
+              const base = Number.parseFloat((opt.dataset.sisaBase || opt.dataset.sisa || '0').toString().replace(',', '.')) || 0;
+              const dec = Number.parseFloat((it.lot_number || 0).toString().replace(',', '.')) || 0;
+              let remain = Math.max(0, base - dec);
+              remain = Math.round(remain * 1000) / 1000;
+              opt.dataset.sisaBase = String(remain);
+              opt.dataset.sisaBaseRaw = String(remain);
+              opt.dataset.sisa = String(remain);
+              opt.dataset.sisa_raw = String(remain);
+              update501OptionLabel(opt);
+            });
           }
         } catch (_) { /* ignore */ }
       });
@@ -2068,11 +2112,11 @@ document.addEventListener("DOMContentLoaded", () => {
             '<option value="" selected disabled>-- Pilih Batch --</option>';
           if (data && data.length > 0) {
             data.forEach((batch) => {
-              const sisa_501 = formatAngkaJS(batch.sisa_lot_number);
-              const optionText = `Tgl: ${batch.transaction_date} - Batch: ${
-                batch.batch_number || "N/A"
-              } (Sisa 501: ${sisa_501} Kg)`;
-              batchSelect501.innerHTML += `<option value="${batch.id}" data-sisa="${batch.sisa_lot_number}">${optionText}</option>`;
+              const raw = (batch.sisa_lot_number ?? '').toString();
+              const date = batch.transaction_date || '';
+              const bnum = batch.batch_number || 'N/A';
+              const optionText = `Tgl: ${date} - Batch: ${bnum} (Sisa 501: ${raw.replace('.', ',')} Kg)`;
+              batchSelect501.innerHTML += `<option value="${batch.id}" data-date="${date}" data-batch_number="${bnum}" data-sisa="${Number.parseFloat(raw.replace(',', '.'))}" data-sisa-raw="${raw}" data-sisa-base="${Number.parseFloat(raw.replace(',', '.'))}" data-sisa-base-raw="${raw}">${optionText}</option>`;
             });
           } else {
             batchSelect501.innerHTML =
@@ -2085,10 +2129,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // Otomatis isi jumlah 501 dengan sisa maksimalnya saat batch dipilih
     batchSelect501.addEventListener("change", function () {
       const selectedOption = this.options[this.selectedIndex];
-      if (selectedOption && selectedOption.dataset.sisa) {
-        quantityInput501.value = selectedOption.dataset.sisa;
+      if (selectedOption) {
+        // Reset current sisa to base when switching batch
+        selectedOption.dataset.sisa = selectedOption.dataset.sisaBase || selectedOption.dataset.sisa;
+        selectedOption.dataset.sisa_raw = selectedOption.dataset.sisaBaseRaw || selectedOption.dataset.sisa_raw;
+        if (selectedOption.dataset.sisa_raw) {
+          quantityInput501.value = selectedOption.dataset.sisa_raw.replace('.', ',');
+        } else if (selectedOption.dataset.sisa) {
+          quantityInput501.value = String(selectedOption.dataset.sisa).replace('.', ',');
+        }
       }
-        });
+      update501SisaDisplay();
+    });
    }
 });
  

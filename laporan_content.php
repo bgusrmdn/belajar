@@ -6,6 +6,45 @@ $hide_zero_closing = isset($_GET['hide_zero_closing']) ? (bool)$_GET['hide_zero_
 // Hitung tanggal sebelumnya (H-1) untuk mengambil data barang masuk/keluar dan stock awal
 $previous_date = date('Y-m-d', strtotime($filter_date . ' -1 day'));
 
+// Tambahan aturan khusus:
+// - Pada tanggal 16, stok akhir = total sisa (IN - OUT) hingga tanggal 16 (per produk)
+// - Tanggal >= 17, stok awal = stok akhir tanggal 16 (baseline),
+//   sedangkan barang masuk/keluar tetap diambil H-1 dari tanggal yang dipilih
+$dayOfMonth = (int)date('d', strtotime($filter_date));
+$day16Date = date('Y-m-16', strtotime($filter_date));
+
+// Siapkan peta stok akhir tanggal 16 per produk
+$closing16Map = [];
+try {
+    $closing16Sql = "
+        SELECT
+            p.id AS product_id,
+            SUM( COALESCE(i.quantity_kg,0) - COALESCE(o.sum_out_kg,0) ) AS closing16_kg,
+            SUM( COALESCE(i.quantity_sacks,0) - COALESCE(o.sum_out_sacks,0) ) AS closing16_sak
+        FROM products p
+        JOIN incoming_transactions i ON i.product_id = p.id AND i.transaction_date <= ?
+        LEFT JOIN (
+            SELECT incoming_transaction_id,
+                   SUM(quantity_kg) AS sum_out_kg,
+                   SUM(quantity_sacks) AS sum_out_sacks
+            FROM outgoing_transactions
+            WHERE transaction_date <= ?
+            GROUP BY incoming_transaction_id
+        ) o ON o.incoming_transaction_id = i.id
+        GROUP BY p.id
+    ";
+    $stmt16 = $pdo->prepare($closing16Sql);
+    $stmt16->execute([$day16Date, $day16Date]);
+    foreach ($stmt16->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $closing16Map[(int)$r['product_id']] = [
+            'kg' => (float)($r['closing16_kg'] ?? 0),
+            'sak' => (float)($r['closing16_sak'] ?? 0),
+        ];
+    }
+} catch (Throwable $e) {
+    // Jika gagal, biarkan peta kosong sehingga fallback ke perhitungan default
+}
+
 // QUERY FINAL DENGAN LOGIKA BARU:
 // - Stock awal tanggal X = stock awal tanggal X-1 (transaksi sebelum tanggal X-1)
 // - Barang masuk/keluar = transaksi pada tanggal X-1
@@ -46,14 +85,14 @@ $stmt = $pdo->prepare($sql);
 // - Stock awal menggunakan $previous_date (untuk menghitung stock awal tanggal X-1)
 // - Barang masuk/keluar menggunakan $previous_date (transaksi pada H-1)
 $params = [
-    $previous_date,  // untuk opening_stock_kg (IN) - transaksi sebelum tanggal X-1
-    $previous_date,  // untuk opening_stock_kg (OUT) - transaksi sebelum tanggal X-1
-    $previous_date,  // untuk opening_stock_sak (IN) - transaksi sebelum tanggal X-1
-    $previous_date,  // untuk opening_stock_sak (OUT) - transaksi sebelum tanggal X-1
-    $previous_date,  // untuk incoming_kg_today - transaksi pada H-1
-    $previous_date,  // untuk incoming_sak_today - transaksi pada H-1
-    $previous_date,  // untuk outgoing_kg_today - transaksi pada H-1
-    $previous_date,  // untuk outgoing_sak_today - transaksi pada H-1
+    $previous_date,  // opening_stock_kg IN < H-1
+    $previous_date,  // opening_stock_kg OUT < H-1
+    $previous_date,  // opening_stock_sak IN < H-1
+    $previous_date,  // opening_stock_sak OUT < H-1
+    $previous_date,  // incoming_kg_today = H-1
+    $previous_date,  // incoming_sak_today = H-1
+    $previous_date,  // outgoing_kg_today = H-1
+    $previous_date,  // outgoing_sak_today = H-1
 ];
 
 $stmt->execute($params);
@@ -61,7 +100,32 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $report_data = [];
 foreach ($results as $row) {
-    $closing_stock_kg = $row['opening_stock_kg'] + $row['incoming_kg_today'] - $row['outgoing_kg_today'];
+    $productId = (int)$row['id'];
+
+    // Gunakan stok awal default dari query
+    $opening_stock_kg = (float)$row['opening_stock_kg'];
+    $opening_stock_sak = (float)$row['opening_stock_sak'];
+
+    // Jika tanggal >= 17, stok awal diganti baseline stok akhir tanggal 16
+    if ($dayOfMonth > 16) {
+        $opening_stock_kg = $closing16Map[$productId]['kg'] ?? 0.0;
+        $opening_stock_sak = $closing16Map[$productId]['sak'] ?? 0.0;
+    }
+
+    $incoming_kg_today = (float)$row['incoming_kg_today'];
+    $incoming_sak_today = (float)$row['incoming_sak_today'];
+    $outgoing_kg_today = (float)$row['outgoing_kg_today'];
+    $outgoing_sak_today = (float)$row['outgoing_sak_today'];
+
+    // Hitung stok akhir default
+    $closing_stock_kg = $opening_stock_kg + $incoming_kg_today - $outgoing_kg_today;
+    $closing_stock_sak = $opening_stock_sak + $incoming_sak_today - $outgoing_sak_today;
+
+    // Pada tanggal 16, stok akhir mengikuti perhitungan total sisa batch (closing16)
+    if ($dayOfMonth === 16) {
+        $closing_stock_kg = $closing16Map[$productId]['kg'] ?? 0.0;
+        $closing_stock_sak = $closing16Map[$productId]['sak'] ?? 0.0;
+    }
 
     if (is_numeric($filter_qty_kg) && $closing_stock_kg < (float)$filter_qty_kg) {
         continue;
@@ -70,18 +134,17 @@ foreach ($results as $row) {
         continue;
     }
 
-    $closing_stock_sak = $row['opening_stock_sak'] + $row['incoming_sak_today'] - $row['outgoing_sak_today'];
-    $average_qty = ($closing_stock_sak != 0) ? $closing_stock_kg / $closing_stock_sak : 0;
+    $average_qty = ($closing_stock_sak != 0) ? ($closing_stock_kg / $closing_stock_sak) : 0;
 
     $report_data[] = [
         'sku' => $row['sku'],
         'product_name' => $row['product_name'],
-        'opening_stock_kg' => $row['opening_stock_kg'],
-        'opening_stock_sak' => $row['opening_stock_sak'],
-        'incoming_kg_today' => $row['incoming_kg_today'],
-        'incoming_sak_today' => $row['incoming_sak_today'],
-        'outgoing_kg_today' => $row['outgoing_kg_today'],
-        'outgoing_sak_today' => $row['outgoing_sak_today'],
+        'opening_stock_kg' => $opening_stock_kg,
+        'opening_stock_sak' => $opening_stock_sak,
+        'incoming_kg_today' => $incoming_kg_today,
+        'incoming_sak_today' => $incoming_sak_today,
+        'outgoing_kg_today' => $outgoing_kg_today,
+        'outgoing_sak_today' => $outgoing_sak_today,
         'closing_stock_kg' => $closing_stock_kg,
         'closing_stock_sak' => $closing_stock_sak,
         'average_qty' => $average_qty,
