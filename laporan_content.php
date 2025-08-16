@@ -19,20 +19,22 @@ try {
     $closing16Sql = "
         SELECT
             p.id AS product_id,
-            (SUM(CASE WHEN t.type = 'IN' AND t.transaction_date <= ? THEN t.quantity_kg ELSE 0 END) -
-             SUM(CASE WHEN t.type = 'OUT' AND t.transaction_date <= ? THEN t.quantity_kg ELSE 0 END)) AS closing16_kg,
-            (SUM(CASE WHEN t.type = 'IN' AND t.transaction_date <= ? THEN t.quantity_sacks ELSE 0 END) -
-             SUM(CASE WHEN t.type = 'OUT' AND t.transaction_date <= ? THEN t.quantity_sacks ELSE 0 END)) AS closing16_sak
+            SUM( COALESCE(i.quantity_kg,0) - COALESCE(o.sum_out_kg,0) ) AS closing16_kg,
+            SUM( COALESCE(i.quantity_sacks,0) - COALESCE(o.sum_out_sacks,0) ) AS closing16_sak
         FROM products p
+        JOIN incoming_transactions i ON i.product_id = p.id AND i.transaction_date <= ?
         LEFT JOIN (
-            SELECT product_id, transaction_date, quantity_kg, quantity_sacks, 'IN' AS type FROM incoming_transactions
-            UNION ALL
-            SELECT product_id, transaction_date, quantity_kg, quantity_sacks, 'OUT' AS type FROM outgoing_transactions
-        ) AS t ON p.id = t.product_id
+            SELECT incoming_transaction_id,
+                   SUM(quantity_kg) AS sum_out_kg,
+                   SUM(quantity_sacks) AS sum_out_sacks
+            FROM outgoing_transactions
+            WHERE transaction_date <= ?
+            GROUP BY incoming_transaction_id
+        ) o ON o.incoming_transaction_id = i.id
         GROUP BY p.id
     ";
     $stmt16 = $pdo->prepare($closing16Sql);
-    $stmt16->execute([$day16Date, $day16Date, $day16Date, $day16Date]);
+    $stmt16->execute([$day16Date, $day16Date]);
     foreach ($stmt16->fetchAll(PDO::FETCH_ASSOC) as $r) {
         $closing16Map[(int)$r['product_id']] = [
             'kg' => (float)($r['closing16_kg'] ?? 0),
